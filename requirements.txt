@@ -1,0 +1,33 @@
+# Dependencies for WhIPA's own code (deploy.py, fine_tune.py, scripts/whipa_utils.py,
+# scripts/loader.py, scripts/metrics.py). No requirements.txt shipped with the
+# original repo; this list was compiled by running the code and installing
+# packages as ImportErrors surfaced.
+#
+# Install with:
+#   pip3 install -r requirements.txt --break-system-packages
+#
+# Then run this one-time step for the Japanese G2P dependency:
+#   python3 -m unidic download
+
+torch
+transformers
+datasets
+soundfile
+scipy
+numpy
+peft
+epitran
+textgrid
+pandas
+panphon
+mecab-python3
+unidic
+pyyaml
+tensorboard
+
+# bitsandbytes: only needed for WhIPA's own CUDA-based 8-bit quantized LoRA
+# loading path (scripts/loader.py's PEFT branch). Not required, and will
+# likely not install correctly, on Apple Silicon / non-CUDA machines. If
+# you're following the MPS-based training path in this repo instead, skip
+# this dependency entirely.
+# bitsandbytes
