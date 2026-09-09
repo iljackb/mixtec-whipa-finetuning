@@ -4,6 +4,11 @@ Custom pipeline for fine-tuning [WhIPA](https://github.com/jshrdt/whipa) (a Whis
 
 This repo is the ASR/phonetic-transcription tooling side of a larger language documentation project. The linguistic corpus itself (TEI/XML transcriptions, dictionary, paradigms) lives separately at **[iljackb/Mixtepec_Mixtec](https://github.com/iljackb/Mixtepec_Mixtec)**: see that repo's `ASR-finetuning/` folder for versioned result reports and methodology documentation tied to specific training runs.
 
+## Before you start
+
+If you're trying to fine-tune WhIPA on your own custom corpus, read **[docs/IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md)** first. It documents several undocumented requirements, known bugs in the current codebase, and a non-CUDA (Apple Silicon) training path that aren't covered anywhere in WhIPA's own README.
+
+
 ## What's in here
 
 - `code/`: a clone of the upstream [jshrdt/whipa](https://github.com/jshrdt/whipa) package, with a handful of bug fixes applied (see commit history; several of its dependencies have been removed/renamed in current `transformers` releases since it was written).
