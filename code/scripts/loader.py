@@ -5,7 +5,7 @@ import yaml
 import json
 
 from datasets import load_dataset, concatenate_datasets, Dataset, IterableDataset, Audio, Value
-from transformers import WhisperProcessor, WhisperTokenizer, WhisperForConditionalGeneration, BitsAndBytesConfig, TRANSFORMERS_CACHE
+from transformers import WhisperProcessor, WhisperTokenizer, WhisperForConditionalGeneration, BitsAndBytesConfig
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor, Wav2Vec2FeatureExtractor, Wav2Vec2CTCTokenizer
 
 from functools import partial

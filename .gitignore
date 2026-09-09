@@ -1,0 +1,17 @@
+# Model checkpoints - large, regenerable from training
+models/
+
+# Built datasets - large, regenerable from the manifest + audio
+whipa_raw_dataset/
+whipa_prepped_dataset/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Backup files from sed edits
+*.bak
+.vscode/

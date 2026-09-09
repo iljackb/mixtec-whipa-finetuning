@@ -1,6 +1,7 @@
 # whipa deployment
 import os
 import json
+import torch
 
 from transformers import WhisperForConditionalGeneration, WhisperTokenizer, WhisperProcessor
 from peft import PeftModel
@@ -72,7 +73,7 @@ class WHIPA:
                        verbose: bool = False):
         if not n_beams:
             n_beams = self.ft_config["gen_args"]["num_beams"]
-        input_features = torch.tensor(sample["input_features"]).unsqueeze(0).to(whipa.model.device)
+        input_features = torch.tensor(sample["input_features"]).unsqueeze(0).to(self.model.device)
         out = self.tokenizer.decode(self.model.generate(input_features, num_beams=n_beams)[0])
 
         if fallback:
