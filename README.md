@@ -31,3 +31,6 @@ The corpus (`Mixtepec_Mixtec`) and this tooling are different in kind: one is li
 ## Status
 
 First working fine-tuned checkpoint (`lowhipa-mixtec-v1`) trained on 1,076 tokens; results and methodology documented in `Mixtepec_Mixtec/ASR-finetuning/`.
+
+### Note:
+This system was implemented (and debugged) with AI assistence from Claude
