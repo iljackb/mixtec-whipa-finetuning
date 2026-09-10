@@ -15,3 +15,4 @@ __pycache__/
 # Backup files from sed edits
 *.bak
 .vscode/
+finetune_corpus/wav/
