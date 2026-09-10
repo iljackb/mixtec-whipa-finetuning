@@ -17,3 +17,4 @@ __pycache__/
 .vscode/
 finetune_corpus/wav/
 finetune_corpus/wav/
+finetune_corpus/
