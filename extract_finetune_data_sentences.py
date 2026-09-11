@@ -79,6 +79,7 @@ def get_wav_media_ref(tree, xml_filename: str = "") -> str:
 def main():
     rows = []
     skipped_no_end = 0
+    sentence_rows_added = 0
 
     for fname in FILES:
         path = XML_DIR / fname
@@ -108,7 +109,10 @@ def main():
             orth_words = get_word_map(mix_seg)
             ipa_words = get_word_map(ipa_seg)
 
-            for start_key in set(orth_words) & set(ipa_words):
+            matched_keys = set(orth_words) & set(ipa_words)
+
+            # --- existing word-level rows (unchanged) ---
+            for start_key in matched_keys:
                 orth_text, o_start, o_end = orth_words[start_key]
                 ipa_text, i_start, i_end = ipa_words[start_key]
 
@@ -133,17 +137,53 @@ def main():
                     "ipa_notone": ipa_notone,
                     "ipa_full_normalized": ipa_full_normalized,
                     "changed": "yes" if ipa_text != ipa_notone else "no",
+                    "source_corpus": "sentence-level-word",
                 })
+
+            # --- NEW: whole-utterance row, joining already-normalized word-level
+            # IPA in temporal order with spaces, using the <u>'s own start/end
+            # (not any individual word's timing). This teaches the model
+            # multi-word input -> correctly spaced multi-word output, which no
+            # existing training example currently does (every prior example is
+            # single-word, even ones extracted from these same sentences). ---
+            if matched_keys:
+                ordered_keys = sorted(matched_keys, key=lambda k: float(k))
+                joined_normalized = " ".join(
+                    normalize_for_training(ipa_words[k][0]) for k in ordered_keys
+                )
+                joined_orth = " ".join(orth_words[k][0] for k in ordered_keys)
+
+                u_start = u.get("start")
+                u_end = u.get("end")
+
+                if u_start is not None and u_end is not None:
+                    rows.append({
+                        "xml_file": fname,
+                        "wav_file": wav_ref,
+                        "token_n": "",
+                        "start": u_start,
+                        "end": u_end,
+                        "orth": joined_orth,
+                        "ipa_gold": "",  # no single "raw gold" string for a joined multi-word row
+                        "ipa_notone": "",
+                        "ipa_full_normalized": joined_normalized,
+                        "changed": "",
+                        "source_corpus": "sentence-level-full",
+                    })
+                    sentence_rows_added += 1
 
     with open(OUT_CSV, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=[
             "xml_file", "wav_file", "token_n", "start", "end",
-            "orth", "ipa_gold", "ipa_notone", "ipa_full_normalized", "changed"
+            "orth", "ipa_gold", "ipa_notone", "ipa_full_normalized", "changed",
+            "source_corpus",
         ])
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"Wrote {len(rows)} word-level tokens to {OUT_CSV}")
+    print(f"Wrote {len(rows)} total rows to {OUT_CSV}")
+    print(f"  Word-level rows: {len(rows) - sentence_rows_added}")
+    print(f"  Whole-utterance rows added: {sentence_rows_added}")
     print(f"Skipped (no end-time available -- file predates synch fix): {skipped_no_end}")
 
 

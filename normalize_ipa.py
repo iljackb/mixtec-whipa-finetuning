@@ -35,27 +35,36 @@ def strip_tones(ipa: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# 2. Affricate normalization -- ligatures only, no tie-bar insertion
+# 2. Affricate tie-bar standardization
 # ---------------------------------------------------------------------------
-# Decision (2026-09-09): dropped tie-bar standardization. The plain sequences
-# [tʃ], [dʒ] etc. are unambiguous enough for this project's actual use case
-# (transcriptions for language documentation/community use, not a phonetics
-# publication) -- not worth the added visual complexity or the tie-bar
-# inconsistency the model itself showed in early fine-tuning output.
-# Ligatures (ʧ, ʤ, etc.) are still normalized down to plain two-character
-# sequences, since those are deprecated in the current IPA standard and
-# inconsistent across fonts/rendering -- just without adding a tie bar.
+TIE_BAR = "\u0361"  # combining double inverted breve
+
+# Order matters: ligatures first (single char -> two chars + tie bar),
+# then plain two-char sequences (insert tie bar between them).
 LIGATURE_MAP = {
-    "ʧ": "tʃ",
-    "ʤ": "dʒ",
-    "ʦ": "ts",
-    "ʣ": "dz",
+    "ʧ": "t" + TIE_BAR + "ʃ",
+    "ʤ": "d" + TIE_BAR + "ʒ",
+    "ʦ": "t" + TIE_BAR + "s",
+    "ʣ": "d" + TIE_BAR + "z",
+}
+
+PLAIN_SEQUENCE_MAP = {
+    "tʃ": "t" + TIE_BAR + "ʃ",
+    "dʒ": "d" + TIE_BAR + "ʒ",
+    "ts": "t" + TIE_BAR + "s",
+    "dz": "d" + TIE_BAR + "z",
 }
 
 
 def standardize_affricates(ipa: str) -> str:
     for ligature, replacement in LIGATURE_MAP.items():
         ipa = ipa.replace(ligature, replacement)
+    for plain, replacement in PLAIN_SEQUENCE_MAP.items():
+        # skip if already tie-barred (avoid double-inserting)
+        already_tied = plain[0] + TIE_BAR + plain[1]
+        ipa = ipa.replace(already_tied, "\uE000")  # temp placeholder to protect existing tie-barred forms
+        ipa = ipa.replace(plain, replacement)
+        ipa = ipa.replace("\uE000", already_tied)
     return ipa
 
 
@@ -79,6 +88,34 @@ def normalize_vowel_length(ipa: str) -> str:
 # 4. Creakiness heuristic
 # ---------------------------------------------------------------------------
 CREAKY_MARK = "\u0330"  # combining tilde below
+DENTAL_DIACRITIC = "\u032A"  # combining bridge below
+RARE_INCIDENTAL_MARKS = {0x0329, 0x0339}  # vertical line below, right half ring below -- 1 occurrence each in the corpus, removed for normalization
+
+
+def normalize_dental_diacritic(ipa: str) -> str:
+    """
+    Strip the dental diacritic entirely. Unlike creakiness (which is
+    conditionally meaningful, see normalize_creakiness below), dental
+    articulation is not phonologically contrastive in this language --
+    confirmed via direct consultation. Always stripped, no adjacency
+    condition needed.
+    """
+    decomposed = unicodedata.normalize("NFD", ipa)
+    cleaned = decomposed.replace(DENTAL_DIACRITIC, "")
+    return unicodedata.normalize("NFC", cleaned)
+
+
+def normalize_rare_incidental_marks(ipa: str) -> str:
+    """
+    Strip a small set of combining marks that occur only once each across the
+    whole corpus (syllabic marker, less-rounded marker) -- confirmed
+    incidental/non-systematic rather than a regular phonological pattern
+    (contrast with COMBINING CARON BELOW, U+032C, which is kept: that one is
+    systematic, marking a regular partially-voiced post-nasal /k/ variant).
+    """
+    decomposed = unicodedata.normalize("NFD", ipa)
+    cleaned = "".join(ch for ch in decomposed if ord(ch) not in RARE_INCIDENTAL_MARKS)
+    return unicodedata.normalize("NFC", cleaned)
 
 
 def normalize_creakiness(ipa: str) -> str:
@@ -112,9 +149,11 @@ def normalize_creakiness(ipa: str) -> str:
 # Combined pipeline
 # ---------------------------------------------------------------------------
 def normalize_for_training(ipa: str) -> str:
-    """Apply all four rules in sequence to produce a final ASR training target."""
+    """Apply all rules in sequence to produce a final ASR training target."""
     ipa = strip_tones(ipa)
     ipa = standardize_affricates(ipa)
     ipa = normalize_vowel_length(ipa)
+    ipa = normalize_dental_diacritic(ipa)
+    ipa = normalize_rare_incidental_marks(ipa)
     ipa = normalize_creakiness(ipa)
     return ipa
