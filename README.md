@@ -1,6 +1,6 @@
 # mixtec-whipa-finetuning
 
-Custom pipeline for fine-tuning [WhIPA](https://github.com/jshrdt/whipa) (a Whisper-based speech-to-IPA model) on Mixtepec Mixtec (Sa'an Savi), an under-resourced Otomanguean language with no prior representation in WhIPA's training data.
+Custom pipeline for fine-tuning [WhIPA](https://github.com/jshrdt/whipa) (a Whisper-based speech-to-IPA (STIPA) model) on Mixtepec Mixtec (Sa'an Savi), an under-resourced Otomanguean language with no prior representation in WhIPA's training data.
 
 This repo is the ASR/phonetic-transcription tooling side of a larger language documentation project. The linguistic corpus itself (TEI/XML transcriptions, dictionary, paradigms) lives separately at **[iljackb/Mixtepec_Mixtec](https://github.com/iljackb/Mixtepec_Mixtec)**: see that repo's `ASR-finetuning/` folder for versioned result reports and methodology documentation tied to specific training runs.
 
