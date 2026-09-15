@@ -100,6 +100,15 @@ IA_GLIDE_RE = re.compile(r"i([\u0300-\u036F]*)a([\u0300-\u036F]*)")
 
 ELLIPSIS_CHARS = ("...", "\u2026")  # literal three dots, or the single-char ellipsis symbol
 
+# Whole-word lexical exceptions: known irregular/suppletive pronunciations
+# that don't follow the general phonological rules above -- checked FIRST,
+# before any other rule, on an exact whole-word match.
+WORD_EXCEPTIONS = {
+    "kuê": "wɛ̂",  # k fully elided here (unlike the general ku-glide rule,
+                   # which would otherwise give "kwɛ̂" -- confirmed this
+                   # specific word drops the k entirely, not just glides it)
+}
+
 
 def handle_extra_long(word: str):
     """
@@ -187,6 +196,10 @@ def convert_word(word: str):
     """Convert a single orthographic word (no hyphens) to a draft IPA form.
     Returns (ipa_string, flags) where flags notes anything needing review."""
     flags = []
+
+    # Whole-word lexical exceptions checked FIRST, before any general rule.
+    if word in WORD_EXCEPTIONS:
+        return WORD_EXCEPTIONS[word], flags
 
     # Handle expressive lengthening (ellipsis) FIRST, before any other rule --
     # strips the ellipsis and the extended vowel, processes the remaining
