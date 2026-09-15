@@ -70,6 +70,7 @@ for orth_v, ipa_v in {"a": "a", "i": "i", "u": "u", "o": "o", "e": "ɛ"}.items()
 # ---------------------------------------------------------------------------
 CONSONANT_MAP = {
     "nch": "ndʒ",  # prenasalization triggers voicing: NOT the naive n+ch = ntʃ
+    "nk": "ŋk",    # prenasal assimilates to velar place before a velar consonant
     "ch": "tʃ",
     "ts": "ts",
     "x": "ʃ",
