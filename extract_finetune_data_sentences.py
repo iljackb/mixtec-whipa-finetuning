@@ -33,6 +33,12 @@ FILES = [
     "Leccion_02.xml",
     "Leccion_03.xml",
     "Leccion_05.xml",
+    "Leccion_07.xml",
+    "Leccion_08.xml",
+    "Leccion_09.xml",
+    "Leccion_10.xml",
+    "Leccion_11.xml",
+    "Leccion_12.xml",
     "_Los_Sonidos_del_mixteco.xml",
 ]
 
