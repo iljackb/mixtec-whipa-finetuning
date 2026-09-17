@@ -12,9 +12,9 @@ If you're trying to fine-tune WhIPA on your own custom corpus, read **[docs/IMPL
 ## What's in here
 
 - `code/`: a clone of the upstream [jshrdt/whipa](https://github.com/jshrdt/whipa) package, with a handful of bug fixes applied (see commit history; several of its dependencies have been removed/renamed in current `transformers` releases since it was written).
-- Custom pipeline scripts (project root): none of these exist in upstream WhIPA. They handle everything needed to go from an existing TEI/XML transcription corpus to a WhIPA-ready training dataset, run in this order:
-  - `extract_finetune_data.py` / `extract_finetune_data_sentences.py`: extract token-level orthography, gold IPA, and audio timestamps from two structurally different TEI corpus formats (each internally uses `normalize_ipa.py` to clean up inconsistent legacy IPA notation, tone marking, vowel length, affricates, creakiness, into consistent training targets).
-  - `combine_manifests.py`: merges both extraction scripts' output into one combined manifest.
+- Custom pipeline scripts (project root): none of these exist in upstream WhIPA, and they are specific to this project's Mixtepec Mixtec corpus and orthographic conventions, not a generic, reusable toolkit for fine-tuning WhIPA on any language (see [docs/IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) for the general, transferable gaps/lessons instead). They handle everything needed to go from an existing TEI/XML transcription corpus to a WhIPA-ready training dataset, run in this order:
+  - `extract_finetune_data.py` / `extract_finetune_data_sentences.py` / `extract_finetune_data_myuc.py`: extract token-level orthography, gold IPA, and audio timestamps from three structurally different TEI corpus formats (each internally uses `normalize_ipa.py` to clean up inconsistent legacy IPA notation, tone marking, vowel length, affricates, creakiness, into consistent training targets).
+  - `combine_manifests.py`: merges aforementioned custom pipeline extraction scripts' output into one combined manifest.
   - `verify_audio_paths.py`: cross-references expected audio filenames against what's actually on disk.
   - `build_finetune_dataset.py`: crops/resamples audio and builds a raw `datasets.Dataset`.
   - `run_prep_dataset.py`: applies WhIPA's own feature-extraction/tokenization functions to that dataset.

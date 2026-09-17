@@ -152,6 +152,7 @@ def main():
                 "ipa_notone": ipa_notone,
                 "ipa_full_normalized": ipa_full_normalized,
                 "changed": "yes" if ipa_text != ipa_notone else "no",
+                "source_corpus": "single-word",
             })
             file_had_token = True
 
@@ -161,7 +162,7 @@ def main():
     with open(OUT_CSV, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=[
             "xml_file", "wav_file", "token_n", "start", "end",
-            "orth", "ipa_gold", "ipa_notone", "ipa_full_normalized", "changed"
+            "orth", "ipa_gold", "ipa_notone", "ipa_full_normalized", "changed", "source_corpus"
         ])
         writer.writeheader()
         writer.writerows(rows)
