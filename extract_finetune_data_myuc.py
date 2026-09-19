@@ -21,8 +21,10 @@ for the orth-ucsb/ipa <seg> elements:
     in this case, the <w> elements' text is joined back together with
     spaces, reconstructing the exact same whole-utterance string either way.
 
-Usage:
-    python3 extract_finetune_data_myuc.py MYUC-1042.xml --output finetune_review_myuc.csv
+Usage: 
+    python3 extract_finetune_data_myuc.py "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/misc-sources/Jerry_Guillem_Mixtec/bees/MYUC-1042.xml" --output "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/misc-sources/Jerry_Guillem_Mixtec/bees/finetune_review_myuc.csv"
+
+> outputs file to /bees folder in Mixtepec_Mixtec project dir not whipa (so that will be where i need to retrieve it)
 """
 
 import argparse
