@@ -28,6 +28,15 @@ DESIGN, revised after inspecting your actual code/scripts/whipa_utils.py directl
   script), so the actual feature-extraction and tokenization is guaranteed
   identical to what fine_tune.py itself would produce -- not a reimplementation.
 
+  Rows whose training target (the --ipa-column, default "ipa_full_normalized")
+  is empty/blank after stripping whitespace are skipped -- an empty string as
+  a training label doesn't just mean "no data", it actively trains the model
+  to expect silence/no-output for a real audio segment, which is worse than
+  omitting the row entirely. This is a generic guard, not specific to any one
+  file -- it will also catch any future row where normalization happens to
+  strip everything from the gold transcription (e.g. a token whose only
+  annotated content was a tone mark).
+
 Usage:
     python3 build_finetune_dataset.py finetune_manifest_combined.csv \
         --search-dir "/path/to/media/speech-mix" \
@@ -125,10 +134,16 @@ def main():
     dataset_rows = []
     skipped_no_audio = 0
     skipped_error = 0
+    skipped_empty_target = 0
 
     with open(args.manifest_csv, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for i, row in enumerate(reader):
+            ipa_target = row.get(args.ipa_column, "").strip()
+            if not ipa_target:
+                skipped_empty_target += 1
+                continue
+
             wav_file = row.get("wav_file", "").strip()
             wav_path = find_wav_path(wav_file, wav_index)
 
@@ -151,7 +166,7 @@ def main():
                     # MUST be named literally "ipa" -- confirmed by directly
                     # reading prepare_dataset_ipa() in scripts/whipa_utils.py:
                     # batch["labels"] = tokenizer.encode_plus(batch["ipa"], ...)
-                    "ipa": row.get(args.ipa_column, ""),
+                    "ipa": ipa_target,
 
                     # Bookkeeping columns -- not read by WhIPA's own code, but
                     # useful for your own debugging/filtering later. Safe to
@@ -168,6 +183,7 @@ def main():
                 continue
 
     print(f"\nBuilt {len(dataset_rows)} raw training examples")
+    print(f"  Skipped (empty training target after normalization): {skipped_empty_target}")
     print(f"  Skipped (audio not found): {skipped_no_audio}")
     print(f"  Skipped (processing error): {skipped_error}")
 
@@ -181,4 +197,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
