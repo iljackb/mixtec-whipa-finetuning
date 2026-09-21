@@ -1,29 +1,67 @@
 """
 Consolidated IPA normalization for WhIPA fine-tuning training targets.
 
-Combines all four established normalization rules into one module, so both
-extraction scripts (extract_finetune_data.py, extract_finetune_data_sentences.py)
+Combines all normalization rules into one module, so both extraction scripts
 apply identical, consistent normalization. Operates ONLY on derived training-
 target strings -- never touches archival TEI source files.
 
 Rules implemented (see IPA_Transcription_Guidelines.md for full rationale):
-  1. Tone-stripping (strip_tones) -- already existed, included here for completeness
-  2. Affricate tie-bar standardization -- tʃ/ʧ -> t͡ʃ, dʒ/ʤ -> d͡ʒ, ts -> t͡s
+  1. Whitespace collapsing -- strips embedded newlines/indentation artifacts
+     from multi-line XML source (e.g. a <w> split across lines via multiple
+     <m> children), collapses any internal whitespace run to a single space.
+  2. Tone-stripping (strip_tones) -- already existed, included here for
+     completeness.
+  3. Affricate tie-bar standardization -- tʃ/ʧ -> t͡ʃ, dʒ/ʤ -> d͡ʒ, ts -> t͡s
      (confirmed via corpus scan: 84x tʃ, 32x dʒ, 91x ts, 6x ʧ, 17x ʤ; 0 tɕ/dʑ/etc found)
-  3. General vowel-length normalization -- Vː -> VV (doubles the vowel+diacritic
+  4. General vowel-length normalization -- Vː -> VV (doubles the vowel+diacritic
      cluster, e.g. nasalized ɛ̃ː -> ɛ̃ɛ̃, not just the bare vowel)
-  4. Creakiness heuristic -- strips creaky-voice diacritic (U+0330) when adjacent
+  5. Dental diacritic removal -- not phonologically contrastive in this language.
+  6. Rare incidental marks removal -- one-off marks confirmed non-systematic.
+  7. Creakiness heuristic -- strips creaky-voice diacritic (U+0330) when adjacent
      to ʔ (redundant, non-phonological per VʔV coarticulation); keeps it when NOT
      adjacent to ʔ (informative -- likely marking a reduced/deleted glottal stop)
+  8. Aspiration removal -- strips superscript ʰ (U+02B0); not phonologically
+     significant for this corpus's training targets.
+  9. Prenasal normalization -- ⁿ (U+207F superscript n) -> plain 'n', per
+     decision to represent prenasals as plain n + following consonant rather
+     than superscript, matching the newer transcription convention.
+
+  NOTE: a blanket case-normalization (lowercasing) step was tried and then
+  REMOVED (2026-09-21) -- it masked stray uppercase Latin letters that are
+  useful as a visual signal for finding remaining SAMPA vestiges during
+  manual corpus cleanup (e.g. "saːL" -> "saal" hid the fact that an "L"
+  needed fixing at the source). Stray-uppercase typos like this should be
+  found and fixed in the archival XML directly, not normalized away here.
 """
 
 import re
 import unicodedata
 
 # ---------------------------------------------------------------------------
-# 1. Tone-stripping (unchanged from extract_finetune_data.py)
+# 0. Whitespace collapsing
 # ---------------------------------------------------------------------------
-STANDALONE_TONE_CHARS = set(range(0x02E5, 0x02EA)) | {0x2197, 0x2198, 0x2219, 0xA71C}
+def normalize_whitespace(ipa: str) -> str:
+    """
+    Collapse any run of whitespace (including literal newlines/indentation
+    pulled in from multi-line XML, e.g. a <w> whose text is split across
+    several <m> children on separate lines) into a single space, then strip
+    leading/trailing whitespace. Safe for both single-word strings (result
+    has no internal whitespace left, since there shouldn't be any) and
+    multi-word aggregate strings (intentional word-separating spaces are
+    preserved, just normalized to exactly one space).
+    """
+    return re.sub(r"\s+", " ", ipa).strip()
+
+
+# ---------------------------------------------------------------------------
+# 1. Tone-stripping
+# ---------------------------------------------------------------------------
+# Standalone (non-combining) tone/pitch marks: Chao tone letters (˥˦˧˨˩),
+# contour arrows, indeterminate-tone marker, and up/downstep modifier letters.
+# NOTE: both up-arrow (U+A71B) and down-arrow (U+A71C) must be listed --
+# an earlier version of this set only included U+A71C (down), silently
+# leaving every up-arrow (U+A71B) instance in normalized output.
+STANDALONE_TONE_CHARS = set(range(0x02E5, 0x02EA)) | {0x2197, 0x2198, 0x2219, 0xA71B, 0xA71C}
 TONE_COMBINING_MARKS = {0x0301, 0x0300, 0x0302, 0x0304, 0x030C, 0x1DC7, 0x1DC5}
 
 
@@ -37,7 +75,7 @@ def strip_tones(ipa: str) -> str:
 # ---------------------------------------------------------------------------
 # 2. Affricate tie-bar standardization
 # ---------------------------------------------------------------------------
-TIE_BAR = "\u0361"  # combining double inverted breve
+TIE_BAR = "͡"  # combining double inverted breve
 
 # Order matters: ligatures first (single char -> two chars + tie bar),
 # then plain two-char sequences (insert tie bar between them).
@@ -62,9 +100,9 @@ def standardize_affricates(ipa: str) -> str:
     for plain, replacement in PLAIN_SEQUENCE_MAP.items():
         # skip if already tie-barred (avoid double-inserting)
         already_tied = plain[0] + TIE_BAR + plain[1]
-        ipa = ipa.replace(already_tied, "\uE000")  # temp placeholder to protect existing tie-barred forms
+        ipa = ipa.replace(already_tied, "")  # temp placeholder to protect existing tie-barred forms
         ipa = ipa.replace(plain, replacement)
-        ipa = ipa.replace("\uE000", already_tied)
+        ipa = ipa.replace("", already_tied)
     return ipa
 
 
@@ -72,12 +110,12 @@ def standardize_affricates(ipa: str) -> str:
 # 3. General vowel-length normalization: Vː -> VV
 # ---------------------------------------------------------------------------
 VOWELS = "aeiouɛɔɨɯ"
-LENGTH_MARK = "\u02D0"  # ː
+LENGTH_MARK = "ː"  # ː
 
 # Matches a base vowel plus any combining diacritics (e.g. nasalization tilde),
 # followed by the length mark -- so nasalized/other-marked long vowels double
 # correctly (ɛ̃ː -> ɛ̃ɛ̃), not just the bare vowel.
-LONG_VOWEL_RE = re.compile(f"([{VOWELS}][\u0300-\u036F]*)\u02D0")
+LONG_VOWEL_RE = re.compile(f"([{VOWELS}][̀-ͯ]*)ː")
 
 
 def normalize_vowel_length(ipa: str) -> str:
@@ -85,10 +123,10 @@ def normalize_vowel_length(ipa: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# 4. Creakiness heuristic
+# 4. Creakiness heuristic / dental / rare marks
 # ---------------------------------------------------------------------------
-CREAKY_MARK = "\u0330"  # combining tilde below
-DENTAL_DIACRITIC = "\u032A"  # combining bridge below
+CREAKY_MARK = "̰"  # combining tilde below
+DENTAL_DIACRITIC = "̪"  # combining bridge below
 RARE_INCIDENTAL_MARKS = {0x0329, 0x0339}  # vertical line below, right half ring below -- 1 occurrence each in the corpus, removed for normalization
 
 
@@ -146,14 +184,47 @@ def normalize_creakiness(ipa: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# 5. Aspiration removal
+# ---------------------------------------------------------------------------
+ASPIRATION_MARK = "ʰ"  # ʰ MODIFIER LETTER SMALL H
+
+
+def strip_aspiration(ipa: str) -> str:
+    """
+    Strip superscript aspiration (ʰ), e.g. kʰ -> k. Not phonologically
+    significant for this corpus's training targets.
+    """
+    return ipa.replace(ASPIRATION_MARK, "")
+
+
+# ---------------------------------------------------------------------------
+# 6. Prenasal normalization
+# ---------------------------------------------------------------------------
+SUPERSCRIPT_N = "ⁿ"  # ⁿ SUPERSCRIPT LATIN SMALL LETTER N
+
+
+def normalize_prenasal(ipa: str) -> str:
+    """
+    Normalize superscript prenasal marking (ⁿ) to plain 'n', e.g. ⁿd -> nd.
+    Matches the newer transcription convention (plain n + following
+    consonant) rather than the older superscript convention, so both are
+    represented identically in training targets.
+    """
+    return ipa.replace(SUPERSCRIPT_N, "n")
+
+
+# ---------------------------------------------------------------------------
 # Combined pipeline
 # ---------------------------------------------------------------------------
 def normalize_for_training(ipa: str) -> str:
     """Apply all rules in sequence to produce a final ASR training target."""
+    ipa = normalize_whitespace(ipa)
     ipa = strip_tones(ipa)
     ipa = standardize_affricates(ipa)
     ipa = normalize_vowel_length(ipa)
     ipa = normalize_dental_diacritic(ipa)
     ipa = normalize_rare_incidental_marks(ipa)
     ipa = normalize_creakiness(ipa)
+    ipa = strip_aspiration(ipa)
+    ipa = normalize_prenasal(ipa)
     return ipa
