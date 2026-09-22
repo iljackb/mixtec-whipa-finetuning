@@ -38,7 +38,8 @@ Per-<u> classification rule (must exactly match classify_tei_structure.py):
   5. Exactly one <w>, with @synch present -> "single-word".
   6. More than one <w>, each with its own distinct @synch -> "sentence".
 
-Extraction logic per classification (verbatim from the original scripts):
+Extraction logic per classification (verbatim from the original scripts,
+EXCEPT for the timeline-resolution fix documented below):
   - "single-word"     -> from extract_finetune_data.py: one row per <u>,
                           using the <u>'s OWN start/end and n (not the
                           word's synch times), source_corpus="single-word".
@@ -63,6 +64,30 @@ Extraction logic per classification (verbatim from the original scripts):
                           greps for the literal string "myuc-utterance",
                           update it to "whole-utterance" or teach it to
                           recognize both.
+
+FIX (2026-09-21): "sentence"-type rows' start/end times were WRONG. Each
+<w>'s @synch attribute references timeline-point IDs (e.g. synch="#T6 #T8"),
+and the REAL elapsed-seconds value for each ID lives in this file's
+<timeline><when xml:id="T6" interval="0.63"/></timeline>. The original
+get_word_map() (carried over verbatim from extract_finetune_data_sentences.py)
+never consulted <timeline> at all -- it regex-extracted the literal digit
+suffix from the ID string itself (SYNCH_TIME_RE = r"#T([\d.]+)", so "#T6"
+-> "6") and used that digit directly as a start/end time in SECONDS. For a
+short recording, "T6" and "T8" are nowhere near 6 and 8 seconds in --
+confirmed via a real example (ADJ_tall_1st_pl_01_JS.xml): word "kue" has
+synch="#T6 #T8", whose REAL timeline values are interval="0.63"/interval=
+"0.81", but the old code produced start=6.0, end=8.0. Cropping audio at
+6.0-8.0s on a ~1.24s recording produces an empty/zero-length array every
+time, which is exactly the "1,314 zero-length segment" failures
+build_finetune_dataset.py's diagnostics surfaced.
+
+This is fixed by build_timeline_map() (parses each file's <timeline> into an
+{xml:id: seconds} dict, once per file) and a rewritten get_word_map() that
+resolves each @synch ID through that dict instead of regexing its digits.
+Only "sentence-level-word" rows were affected (the only place that used
+get_word_map()'s parsed timing) -- "single-word", "whole-utterance", and the
+"sentence-level-full" aggregate row all use <u>'s own start/end attributes
+directly, which were always correct.
 
 Excludes:
   - Any file whose name ends in "metadata.xml" (case-insensitive) -- these
@@ -92,6 +117,7 @@ from lxml import etree
 from normalize_ipa import normalize_for_training
 
 TEI_NS = {"tei": "http://www.tei-c.org/ns/1.0"}
+XML_NS_ID = "{http://www.w3.org/XML/1998/namespace}id"
 
 # ---------------------------------------------------------------------------
 # Carried over verbatim from extract_finetune_data.py
@@ -110,7 +136,7 @@ HELD_OUT = {
     "ADJ_long_SHAPE_01_02_03_TS",
 }
 
-STANDALONE_TONE_CHARS = set(range(0x02E5, 0x02EA)) | {0x2197, 0x2198, 0x2219, 0xA71C}
+STANDALONE_TONE_CHARS = set(range(0x02E5, 0x02EA)) | {0x2197, 0x2198, 0x2219, 0xA71B, 0xA71C}
 
 
 def strip_tones(ipa: str) -> str:
@@ -134,14 +160,42 @@ def get_wav_media_ref(tree, xml_filename: str = "") -> str:
 
 
 # ---------------------------------------------------------------------------
-# Carried over verbatim from extract_finetune_data_sentences.py
+# NEW: timeline resolution (this is the bug fix)
 # ---------------------------------------------------------------------------
 
-SYNCH_TIME_RE = re.compile(r"#T([\d.]+)")
+def build_timeline_map(tree):
+    """Parse this file's <timeline><when xml:id="Tn" interval="X.XX"/></timeline>
+    into a {xml:id: seconds} dict, so a <w>'s @synch reference (e.g. "#T6")
+    can be resolved to the REAL elapsed-seconds value for that timeline
+    point, instead of misreading the digits inside the ID string itself as
+    if they were seconds. One dict per file -- IDs are only unique within a
+    file, not across the corpus."""
+    timeline = {}
+    for when in tree.findall(".//tei:timeline/tei:when", TEI_NS):
+        xml_id = when.get(XML_NS_ID)
+        interval = when.get("interval")
+        if xml_id is None or interval is None:
+            continue
+        try:
+            timeline[xml_id] = float(interval)
+        except ValueError:
+            continue
+    return timeline
 
 
-def get_word_map(seg):
-    """Map each <w>'s start-time key -> (text, start, end)."""
+# ---------------------------------------------------------------------------
+# Carried over from extract_finetune_data_sentences.py, FIXED to resolve
+# @synch IDs through the file's <timeline> instead of regexing their digits.
+# ---------------------------------------------------------------------------
+
+SYNCH_ID_RE = re.compile(r"#(\S+)")
+
+
+def get_word_map(seg, timeline):
+    """Map each <w>'s start-timeline-id -> (text, start_seconds, end_seconds),
+    with start/end resolved via `timeline` (see build_timeline_map). A <w>
+    whose synch ID isn't in this file's <timeline> is skipped rather than
+    guessed at."""
     result = {}
     if seg is None:
         return result
@@ -150,12 +204,16 @@ def get_word_map(seg):
         if not text:
             continue
         synch = w.get("synch", "")
-        times = SYNCH_TIME_RE.findall(synch)
-        if not times:
+        ids = SYNCH_ID_RE.findall(synch)
+        if not ids:
             continue
-        start = times[0]
-        end = times[1] if len(times) > 1 else None
-        result[start] = (text, start, end)
+        start_id = ids[0]
+        end_id = ids[1] if len(ids) > 1 else None
+        if start_id not in timeline:
+            continue
+        start = timeline[start_id]
+        end = timeline.get(end_id) if end_id else None
+        result[start_id] = (text, start, end)
     return result
 
 
@@ -262,7 +320,8 @@ def build_row(xml_filename, wav_ref, token_n, start, end, orth_text, ipa_text, s
 
 def extract_single_word(u, xml_filename, wav_ref, structural_seg, ipa_seg):
     """Verbatim behavior from extract_finetune_data.py: uses the <u>'s own
-    start/end/n, not the word's own synch timing."""
+    start/end/n, not the word's own synch timing. Unaffected by the
+    timeline-resolution bug/fix."""
     orth_w = structural_seg.find(".//tei:w", TEI_NS)
     ipa_w = ipa_seg.find(".//tei:w", TEI_NS)
     if orth_w is None or ipa_w is None:
@@ -279,28 +338,31 @@ def extract_single_word(u, xml_filename, wav_ref, structural_seg, ipa_seg):
     )]
 
 
-def extract_sentence(u, xml_filename, wav_ref, structural_seg, ipa_seg):
-    """Verbatim behavior from extract_finetune_data_sentences.py: per-word
-    rows using each word's own synch-derived start/end, plus one aggregate
-    row using the <u>'s own start/end."""
-    orth_words = get_word_map(structural_seg)
-    ipa_words = get_word_map(ipa_seg)
+def extract_sentence(u, xml_filename, wav_ref, structural_seg, ipa_seg, timeline):
+    """Behavior from extract_finetune_data_sentences.py, FIXED: per-word rows
+    now use each word's REAL timeline-resolved start/end (via `timeline`,
+    see build_timeline_map/get_word_map) instead of the literal digits in
+    its synch-ID string. The aggregate row is unaffected -- it always used
+    the <u>'s own start/end."""
+    orth_words = get_word_map(structural_seg, timeline)
+    ipa_words = get_word_map(ipa_seg, timeline)
     matched_keys = set(orth_words) & set(ipa_words)
 
     rows = []
     for start_key in matched_keys:
         orth_text, o_start, o_end = orth_words[start_key]
         ipa_text, i_start, i_end = ipa_words[start_key]
-        end = i_end or o_end
+        start = i_start if i_start is not None else o_start
+        end = i_end if i_end is not None else o_end
         if end is None:
             continue
         rows.append(build_row(
-            xml_filename, wav_ref, "", start_key, end,
+            xml_filename, wav_ref, "", start, end,
             orth_text, ipa_text, "sentence-level-word",
         ))
 
     if matched_keys:
-        ordered_keys = sorted(matched_keys, key=lambda k: float(k))
+        ordered_keys = sorted(matched_keys, key=lambda k: timeline[k])
         joined_normalized = " ".join(normalize_for_training(ipa_words[k][0]) for k in ordered_keys)
         joined_orth = " ".join(orth_words[k][0] for k in ordered_keys)
         u_start = u.get("start")
@@ -326,7 +388,8 @@ def extract_sentence(u, xml_filename, wav_ref, structural_seg, ipa_seg):
 def extract_whole_utterance(u, xml_filename, wav_ref, structural_seg, untokenized_seg, ipa_seg):
     """Verbatim behavior from extract_finetune_data_myuc.py, generalized to
     any non-ipa seg (not just notation="orth-ucsb"). Prefers the untokenized
-    seg's raw text for orth when one exists (cleaner than word-rejoining)."""
+    seg's raw text for orth when one exists (cleaner than word-rejoining).
+    Unaffected by the timeline-resolution bug/fix."""
     orth_source = untokenized_seg if untokenized_seg is not None else structural_seg
     orth_text = get_seg_text(orth_source)
     ipa_text = get_seg_text(ipa_seg)
@@ -351,6 +414,7 @@ def process_file(path: Path):
             return [], f"unparseable: {e}"
 
     wav_ref = get_wav_media_ref(tree, path.name)
+    timeline = build_timeline_map(tree)
     rows = []
     skipped = 0
 
@@ -366,7 +430,7 @@ def process_file(path: Path):
         if label == "single-word":
             new_rows = extract_single_word(u, path.name, wav_ref, structural_seg, ipa_seg)
         elif label == "sentence":
-            new_rows = extract_sentence(u, path.name, wav_ref, structural_seg, ipa_seg)
+            new_rows = extract_sentence(u, path.name, wav_ref, structural_seg, ipa_seg, timeline)
         else:
             new_rows = extract_whole_utterance(u, path.name, wav_ref, structural_seg, untokenized_seg, ipa_seg)
 
