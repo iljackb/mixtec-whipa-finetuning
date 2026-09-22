@@ -22,6 +22,7 @@ If you're trying to fine-tune WhIPA on your own custom corpus, read **[docs/IMPL
   - `train_lora_mps.py`: LoRA fine-tuning script adapted for Apple Silicon (MPS), since WhIPA's own training script's PEFT path is CUDA-only (8-bit quantization via `bitsandbytes`).
   - `test_whipa.py`: inference/testing against a held-out set.
   - `score_test_results.py`: evaluation via WhIPA's own `STIPA_METRICS` (PER/PFER), scoring the predictions `test_whipa.py` just produced.
+
 ## Why a separate repo
 
 The corpus (`Mixtepec_Mixtec`) and this tooling are different in kind: one is linguistic data, the other is a Python codebase with its own dependencies and development workflow: so they're kept as separate, cross-linked repos rather than combined.
@@ -29,6 +30,21 @@ The corpus (`Mixtepec_Mixtec`) and this tooling are different in kind: one is li
 ## Status
 
 First working fine-tuned checkpoint (`lowhipa-mixtec-v1`) trained on 1,076 tokens; results and methodology documented in `Mixtepec_Mixtec/ASR-finetuning/`.
+
+## Outputs (not committed to git -- see .gitignore)
+
+Running the full pipeline produces three generated directories, each regenerable from
+the manifest + audio + code, so none are version-controlled:
+
+- `whipa_raw_dataset/` -- `build_finetune_dataset.py`'s output. Raw cropped/resampled
+  audio + normalized IPA text, one row per training example, not yet tokenized.
+- `whipa_prepped_dataset/` -- `run_prep_dataset.py`'s output. The same rows after
+  WhIPA's own `prep_dataset()` adds `input_features` (mel-spectrogram) and `labels`
+  (tokenized IPA); still carries the original raw-dataset columns alongside the new
+  ones, since `prep_dataset()` adds rather than replaces columns.
+- `models/<checkpoint-name>/` -- `train_lora_mps.py`'s output. Periodic training
+  checkpoints, TensorBoard logs, and the final model (LoRA adapter merged into the
+  base model, plus tokenizer/processor) once training completes.
 
 ### Note:
 This system was implemented (and debugged) with AI assistance from Claude

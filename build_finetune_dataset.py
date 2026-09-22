@@ -50,6 +50,7 @@ this step -- those are only needed for the subsequent prep_dataset() call.
 
 import argparse
 import csv
+from collections import Counter
 from math import gcd
 from pathlib import Path
 
@@ -102,16 +103,29 @@ def resample_to_16k(audio: np.ndarray, orig_sr: int) -> np.ndarray:
 
 
 def load_and_crop(wav_path: Path, start: float, end: float):
+    """Returns (segment, diagnostics). diagnostics is a dict with the values
+    used to compute the crop, so a zero-length result can be explained rather
+    than just silently counted."""
     audio, sr = sf.read(str(wav_path))
     if audio.ndim > 1:
         audio = audio.mean(axis=1)  # downmix stereo to mono
     audio = resample_to_16k(audio, sr)
     sr = TARGET_SR
 
-    start_sample = int(float(start) * sr)
-    end_sample = int(float(end) * sr)
+    start_f = float(start)
+    end_f = float(end)
+    start_sample = int(start_f * sr)
+    end_sample = int(end_f * sr)
     segment = audio[start_sample:end_sample]
-    return np.ascontiguousarray(segment, dtype=np.float32)
+
+    diagnostics = {
+        "audio_total_samples": len(audio),
+        "start_f": start_f,
+        "end_f": end_f,
+        "start_sample": start_sample,
+        "end_sample": end_sample,
+    }
+    return np.ascontiguousarray(segment, dtype=np.float32), diagnostics
 
 
 def main():
@@ -125,6 +139,10 @@ def main():
                           "(default: the fully-normalized column from normalize_ipa.py). "
                           "Gets saved under the literal column name 'ipa', matching "
                           "what prepare_dataset_ipa() in whipa_utils.py expects.")
+    ap.add_argument("--skip-report", type=str, default="skipped_rows_report.csv",
+                     help="Where to write a CSV of every skipped row (reason, xml_file, "
+                          "source_corpus, start/end, and computed sample indices) for "
+                          "diagnosing why rows were dropped. Set to '' to disable.")
     args = ap.parse_args()
 
     print("Indexing .wav files in search directories...")
@@ -133,15 +151,26 @@ def main():
 
     dataset_rows = []
     skipped_no_audio = 0
-    skipped_error = 0
+    skipped_zero_length = 0
+    skipped_exception = 0
     skipped_empty_target = 0
+    skip_report_rows = []
+    zero_length_by_corpus = Counter()
 
     with open(args.manifest_csv, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for i, row in enumerate(reader):
+            xml_file = row.get("xml_file", "")
+            source_corpus = row.get("source_corpus", "")
+
             ipa_target = row.get(args.ipa_column, "").strip()
             if not ipa_target:
                 skipped_empty_target += 1
+                skip_report_rows.append({
+                    "reason": "empty_target", "xml_file": xml_file,
+                    "source_corpus": source_corpus, "wav_file": row.get("wav_file", ""),
+                    "start": row.get("start", ""), "end": row.get("end", ""),
+                })
                 continue
 
             wav_file = row.get("wav_file", "").strip()
@@ -149,12 +178,25 @@ def main():
 
             if wav_path is None:
                 skipped_no_audio += 1
+                skip_report_rows.append({
+                    "reason": "no_audio", "xml_file": xml_file,
+                    "source_corpus": source_corpus, "wav_file": wav_file,
+                    "start": row.get("start", ""), "end": row.get("end", ""),
+                })
                 continue
 
             try:
-                segment = load_and_crop(wav_path, row["start"], row["end"])
+                segment, diag = load_and_crop(wav_path, row["start"], row["end"])
                 if len(segment) == 0:
-                    skipped_error += 1
+                    skipped_zero_length += 1
+                    zero_length_by_corpus[source_corpus] += 1
+                    skip_report_rows.append({
+                        "reason": "zero_length_segment", "xml_file": xml_file,
+                        "source_corpus": source_corpus, "wav_file": wav_file,
+                        "start": diag["start_f"], "end": diag["end_f"],
+                        "start_sample": diag["start_sample"], "end_sample": diag["end_sample"],
+                        "audio_total_samples": diag["audio_total_samples"],
+                    })
                     continue
 
                 dataset_rows.append({
@@ -171,21 +213,44 @@ def main():
                     # Bookkeeping columns -- not read by WhIPA's own code, but
                     # useful for your own debugging/filtering later. Safe to
                     # leave in; prepare_dataset_ipa() only reads "audio"/"ipa".
-                    "xml_file": row.get("xml_file", ""),
+                    "xml_file": xml_file,
                     "wav_file": wav_file,
                     "orth": row.get("orth", ""),
-                    "source_corpus": row.get("source_corpus", ""),
+                    "source_corpus": source_corpus,
                 })
 
             except Exception as e:
                 print(f"  ERROR on row {i} ({wav_file}): {e}")
-                skipped_error += 1
+                skipped_exception += 1
+                skip_report_rows.append({
+                    "reason": "exception", "xml_file": xml_file,
+                    "source_corpus": source_corpus, "wav_file": wav_file,
+                    "start": row.get("start", ""), "end": row.get("end", ""),
+                    "error": str(e),
+                })
                 continue
 
     print(f"\nBuilt {len(dataset_rows)} raw training examples")
     print(f"  Skipped (empty training target after normalization): {skipped_empty_target}")
     print(f"  Skipped (audio not found): {skipped_no_audio}")
-    print(f"  Skipped (processing error): {skipped_error}")
+    print(f"  Skipped (zero-length segment after crop): {skipped_zero_length}")
+    print(f"  Skipped (processing exception): {skipped_exception}")
+
+    if zero_length_by_corpus:
+        print("\n  Zero-length skips by source_corpus:")
+        for corpus, count in zero_length_by_corpus.most_common():
+            print(f"    {corpus}: {count}")
+
+    if args.skip_report and skip_report_rows:
+        fieldnames = ["reason", "xml_file", "source_corpus", "wav_file",
+                      "start", "end", "start_sample", "end_sample",
+                      "audio_total_samples", "error"]
+        with open(args.skip_report, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for r in skip_report_rows:
+                writer.writerow(r)
+        print(f"\n  Full skip report ({len(skip_report_rows)} rows) written to {args.skip_report}")
 
     dataset = Dataset.from_list(dataset_rows)
     dataset.save_to_disk(args.output_dir)
