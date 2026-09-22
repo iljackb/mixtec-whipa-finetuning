@@ -15,7 +15,7 @@ If you're trying to fine-tune WhIPA on your own custom corpus, read **[docs/IMPL
 
 - Custom pipeline scripts (project root): none of these exist in upstream WhIPA, and they are specific to this project's Mixtepec Mixtec corpus and orthographic conventions, not a generic, reusable toolkit for fine-tuning WhIPA on any language (see [docs/IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) for the general, transferable gaps/lessons instead). They handle everything needed to go from an existing TEI/XML transcription corpus to a WhIPA-ready training dataset, run in this order:
 
-  - `extract_finetune_data_unified.py`: extracts token-level orthography, gold IPA, and audio timestamps from the whole corpus in one pass, classifying and dispatching **each `<u>` independently** (not per-file) so a single file can freely mix single-word, sentence, and whole-utterance utterances and still extract correctly. Internally uses `normalize_ipa.py` to clean up inconsistent legacy IPA notation, tone marking, vowel length, affricates, and creakiness into consistent training targets.
+  - `extract_finetune_data_unified.py`: extracts token-level orthography, gold IPA, and audio timestamps from the whole corpus in one pass, classifying and dispatching **each `<u>` independently** (not per-file) so a single file can freely mix single-word, sentence, and whole-utterance utterances and still extract correctly. Internally uses  `normalize_for_training()` function from `normalize_ipa.py` to clean up inconsistent legacy IPA notation, tone marking, vowel length, affricates, and creakiness into consistent training targets.
 
   - `verify_audio_paths.py`: cross-references expected audio filenames against what's actually on disk.
 
