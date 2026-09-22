@@ -1,90 +1,68 @@
 """
-Unified replacement for extract_finetune_data.py, extract_finetune_data_sentences.py,
-and extract_finetune_data_myuc.py.
+Extracts token-level orthography, gold IPA, and audio timestamps from the
+TEI/XML corpus in a single pass over every file.
 
-WHY THIS EXISTS: those three scripts each hard-picked a list of files
-(FILES = [...] / a fixed XML_DIR glob / a single CLI arg) and assumed every
-<u> in a given file has the same structure -- one word per <u> ("single-word"),
-multiple words per <u> with independent @synch timing ("sentence"), or no
-per-word timing at all ("whole-utterance"). That assumption breaks for files
-that genuinely MIX utterance types internally (confirmed via
-classify_tei_structure.py against the full corpus: several transcriptions-xml/
-files have some <u>s that are plain sentences and others with no word timing
-at all in the SAME file) -- no single file-level script choice handles those
-correctly.
+WHY THIS EXISTS: a file-level extraction approach (pick one script per file,
+based on a fixed file list or naming convention) breaks down when a file's
+structure doesn't match its name, or when a single file genuinely MIXES
+utterance types internally -- some `<u>`s are plain sentences with per-word
+timing, others have no word-level timing at all, all in the SAME file. No
+single file-level choice handles that correctly.
 
-This script routes at the <u> LEVEL instead of the file level: every <u> in
-every scanned file is independently classified (single-word / sentence /
-whole-utterance) using the exact same structural rule
-classify_tei_structure.py uses, then dispatched to whichever of the three
-ORIGINAL scripts' extraction logic matches -- reproduced here verbatim, not
-reimplemented, so existing single-word/sentence/whole-utterance manifests
-this replaces should come out byte-for-byte equivalent for files that were
-already correctly classified as one uniform type. The only behavioral
-addition is that mixed-type files now extract every <u> correctly instead of
-needing manual per-file review.
+This script routes at the `<u>` LEVEL instead of the file level: every `<u>`
+in every scanned file is independently classified (single-word / sentence /
+whole-utterance) from its actual XML structure, then dispatched to the
+extraction logic that matches. This means a single file can freely mix all
+three utterance types and still extract correctly.
 
-Per-<u> classification rule (must exactly match classify_tei_structure.py):
+Per-<u> classification rule:
   1. Take every direct <seg> child of <u> that is NOT notation="ipa".
   2. Among those, the "structural" seg is whichever one actually has <w>
-     child elements (MYUC-1042-style files have BOTH an untokenized seg with
-     no <w>s and a tokenized seg with <w>s -- the untokenized one is used
-     for cleaner orth TEXT extraction, but the TOKENIZED one is what tells
-     us whether real per-word timing exists).
+     child elements (some sources have BOTH an untokenized seg with no <w>s
+     and a tokenized seg with <w>s -- the untokenized one is used for
+     cleaner orth TEXT extraction, but the TOKENIZED one is what tells us
+     whether real per-word timing exists).
   3. If that structural seg has no <w>s at all -> "whole-utterance".
   4. If its <w>s carry NO @synch at all -> "whole-utterance" (checked BEFORE
-     word count, since a whole-utterance source like MYUC-1042 can still have
-     genuinely one-word utterances that must not be misread as "single-word").
+     word count, since a whole-utterance source can still have genuinely
+     one-word utterances that must not be misread as "single-word").
   5. Exactly one <w>, with @synch present -> "single-word".
   6. More than one <w>, each with its own distinct @synch -> "sentence".
 
-Extraction logic per classification (verbatim from the original scripts,
-EXCEPT for the timeline-resolution fix documented below):
-  - "single-word"     -> from extract_finetune_data.py: one row per <u>,
-                          using the <u>'s OWN start/end and n (not the
-                          word's synch times), source_corpus="single-word".
-  - "sentence"         -> from extract_finetune_data_sentences.py: one row
-                          per matched orth/ipa word pair using EACH WORD'S
-                          OWN synch-derived start/end
+Extraction logic per classification:
+  - "single-word"     -> one row per <u>, using the <u>'s OWN start/end and
+                          n (not the word's synch times),
+                          source_corpus="single-word".
+  - "sentence"         -> one row per matched orth/ipa word pair using EACH
+                          WORD'S OWN synch-derived start/end
                           (source_corpus="sentence-level-word"), plus one
                           aggregate row joining all matched words in order
                           using the <u>'s own start/end
                           (source_corpus="sentence-level-full").
-  - "whole-utterance"  -> from extract_finetune_data_myuc.py: one row per
-                          <u> using the <u>'s own start/end, orth/ipa text
-                          extracted via get_seg_text() (handles both plain-
-                          text-in-seg and <w>-subdivided-seg shapes).
-                          source_corpus="whole-utterance" -- NOTE: this is a
-                          rename from the original "myuc-utterance", because
-                          this path is no longer MYUC-specific (it now also
-                          covers vocab-conocelos-mx-fb.xml,
-                          vocab-20180914-Tisu.xml, N-V_pain-hurt-JS-TTS.xml,
-                          speech-20170528-JS-TTS.xml, and any mixed-type
-                          file's whole-utterance <u>s). If anything downstream
-                          greps for the literal string "myuc-utterance",
-                          update it to "whole-utterance" or teach it to
-                          recognize both.
+  - "whole-utterance"  -> one row per <u> using the <u>'s own start/end,
+                          orth/ipa text extracted via get_seg_text() (handles
+                          both plain-text-in-seg and <w>-subdivided-seg
+                          shapes). source_corpus="whole-utterance".
 
 FIX (2026-09-21): "sentence"-type rows' start/end times were WRONG. Each
 <w>'s @synch attribute references timeline-point IDs (e.g. synch="#T6 #T8"),
 and the REAL elapsed-seconds value for each ID lives in this file's
-<timeline><when xml:id="T6" interval="0.63"/></timeline>. The original
-get_word_map() (carried over verbatim from extract_finetune_data_sentences.py)
-never consulted <timeline> at all -- it regex-extracted the literal digit
-suffix from the ID string itself (SYNCH_TIME_RE = r"#T([\d.]+)", so "#T6"
--> "6") and used that digit directly as a start/end time in SECONDS. For a
-short recording, "T6" and "T8" are nowhere near 6 and 8 seconds in --
-confirmed via a real example (ADJ_tall_1st_pl_01_JS.xml): word "kue" has
-synch="#T6 #T8", whose REAL timeline values are interval="0.63"/interval=
-"0.81", but the old code produced start=6.0, end=8.0. Cropping audio at
-6.0-8.0s on a ~1.24s recording produces an empty/zero-length array every
-time, which is exactly the "1,314 zero-length segment" failures
-build_finetune_dataset.py's diagnostics surfaced.
+<timeline><when xml:id="T6" interval="0.63"/></timeline>. The extraction
+code never consulted <timeline> at all -- it regex-extracted the literal
+digit suffix from the ID string itself (e.g. "#T6" -> "6") and used that
+digit directly as a start/end time in SECONDS. For a short recording, "T6"
+and "T8" are nowhere near 6 and 8 seconds in -- confirmed via a real example
+(ADJ_tall_1st_pl_01_JS.xml): word "kue" has synch="#T6 #T8", whose REAL
+timeline values are interval="0.63"/interval="0.81", but the old code
+produced start=6.0, end=8.0. Cropping audio at 6.0-8.0s on a ~1.24s
+recording produces an empty/zero-length array every time, which is exactly
+the "1,314 zero-length segment" failures build_finetune_dataset.py's
+diagnostics surfaced.
 
 This is fixed by build_timeline_map() (parses each file's <timeline> into an
-{xml:id: seconds} dict, once per file) and a rewritten get_word_map() that
-resolves each @synch ID through that dict instead of regexing its digits.
-Only "sentence-level-word" rows were affected (the only place that used
+{xml:id: seconds} dict, once per file) and get_word_map(), which resolves
+each @synch ID through that dict instead of regexing its digits. Only
+"sentence-level-word" rows were affected (the only place that used
 get_word_map()'s parsed timing) -- "single-word", "whole-utterance", and the
 "sentence-level-full" aggregate row all use <u>'s own start/end attributes
 directly, which were always correct.
@@ -96,7 +74,7 @@ Excludes:
     typo'd "-meatadata.xml" -- such files have no <u> elements anyway and
     silently contribute zero rows.)
   - HELD_OUT basenames -- the existing zero-shot baseline test set, kept
-    out of training data exactly as extract_finetune_data.py did.
+    out of training data.
 
 Usage:
     python3 extract_finetune_data_unified.py <root_dir> --recursive --output finetune_review_unified.csv
@@ -118,10 +96,6 @@ from normalize_ipa import normalize_for_training
 
 TEI_NS = {"tei": "http://www.tei-c.org/ns/1.0"}
 XML_NS_ID = "{http://www.w3.org/XML/1998/namespace}id"
-
-# ---------------------------------------------------------------------------
-# Carried over verbatim from extract_finetune_data.py
-# ---------------------------------------------------------------------------
 
 HELD_OUT = {
     "ADJ_beautiful_anim_01_JS",
@@ -148,8 +122,8 @@ def strip_tones(ipa: str) -> str:
 
 
 def get_wav_media_ref(tree, xml_filename: str = "") -> str:
-    """Unchanged from all three original scripts: <media> lookup, else
-    derive from the XML's own filename stem + .wav."""
+    """Look up the <media> element's referenced audio filename; if none
+    exists, fall back to the XML file's own filename stem + .wav."""
     media = tree.find(".//tei:media", TEI_NS)
     if media is not None:
         url = media.get("url", "")
@@ -160,7 +134,7 @@ def get_wav_media_ref(tree, xml_filename: str = "") -> str:
 
 
 # ---------------------------------------------------------------------------
-# NEW: timeline resolution (this is the bug fix)
+# Timeline resolution
 # ---------------------------------------------------------------------------
 
 def build_timeline_map(tree):
@@ -182,11 +156,6 @@ def build_timeline_map(tree):
             continue
     return timeline
 
-
-# ---------------------------------------------------------------------------
-# Carried over from extract_finetune_data_sentences.py, FIXED to resolve
-# @synch IDs through the file's <timeline> instead of regexing their digits.
-# ---------------------------------------------------------------------------
 
 SYNCH_ID_RE = re.compile(r"#(\S+)")
 
@@ -217,10 +186,6 @@ def get_word_map(seg, timeline):
     return result
 
 
-# ---------------------------------------------------------------------------
-# Carried over verbatim from extract_finetune_data_myuc.py
-# ---------------------------------------------------------------------------
-
 def get_seg_text(seg):
     """Return the seg's text content, whether it's plain text directly in
     the <seg>, or subdivided into <w> child elements (joined with spaces)."""
@@ -233,7 +198,7 @@ def get_seg_text(seg):
 
 
 # ---------------------------------------------------------------------------
-# NEW: per-<u> structural classification (must match classify_tei_structure.py)
+# Per-<u> structural classification
 # ---------------------------------------------------------------------------
 
 def find_segs(u_elem):
@@ -242,9 +207,9 @@ def find_segs(u_elem):
     structural_orth_seg: the non-ipa <seg> with the most <w> children (used
     to determine word/timing structure, and as a text-extraction fallback).
     untokenized_orth_seg: a non-ipa <seg> with type="untokenized" if one
-    exists (MYUC-style sources) -- preferred for whole-utterance TEXT
-    extraction since it preserves original spacing/punctuation rather than
-    reconstructing it by joining <w>s with plain spaces.
+    exists -- preferred for whole-utterance TEXT extraction since it
+    preserves original spacing/punctuation rather than reconstructing it by
+    joining <w>s with plain spaces.
     ipa_seg: the <seg notation="ipa">.
     """
     candidates = [seg for seg in u_elem.findall("tei:seg", TEI_NS) if seg.get("notation") != "ipa"]
@@ -266,8 +231,10 @@ def find_segs(u_elem):
 
 
 def classify_u(structural_seg):
-    """Return 'single-word', 'sentence', or 'whole-utterance'. Logic must
-    stay in lockstep with classify_tei_structure.py's classify_u()."""
+    """Return 'single-word', 'sentence', or 'whole-utterance' for one <u>,
+    based on how many <w> children its structural seg has and whether they
+    carry their own distinct @synch timing (see the module docstring for the
+    full rule)."""
     if structural_seg is None:
         return "whole-utterance"
 
@@ -286,18 +253,16 @@ def classify_u(structural_seg):
     if len(distinct_synchs) == len(words) and None not in distinct_synchs:
         return "sentence"
 
-    # Multiple <w>s with partially-shared/missing synch -- ambiguous;
-    # classify_tei_structure.py falls back to "single-word" here too (no
-    # independently-timed multi-word extraction is possible), which for
-    # extraction purposes means: treat like a sentence-type <u> anyway so
-    # each word with a synch value still gets its own row, but skip words
-    # missing timing individually rather than dropping the whole <u>.
+    # Multiple <w>s with partially-shared/missing synch -- ambiguous. No
+    # independently-timed multi-word extraction is possible here, but treat
+    # it like a sentence-type <u> anyway so each word with a synch value
+    # still gets its own row, skipping only the words missing timing rather
+    # than dropping the whole <u>.
     return "sentence"
 
 
 # ---------------------------------------------------------------------------
-# Row builders -- one per classification, extraction logic preserved from
-# the original per-type script
+# Row builders -- one per classification
 # ---------------------------------------------------------------------------
 
 def build_row(xml_filename, wav_ref, token_n, start, end, orth_text, ipa_text, source_corpus):
@@ -319,9 +284,8 @@ def build_row(xml_filename, wav_ref, token_n, start, end, orth_text, ipa_text, s
 
 
 def extract_single_word(u, xml_filename, wav_ref, structural_seg, ipa_seg):
-    """Verbatim behavior from extract_finetune_data.py: uses the <u>'s own
-    start/end/n, not the word's own synch timing. Unaffected by the
-    timeline-resolution bug/fix."""
+    """Single-word <u>: one row using the <u>'s own start/end/n, not the
+    word's own synch timing."""
     orth_w = structural_seg.find(".//tei:w", TEI_NS)
     ipa_w = ipa_seg.find(".//tei:w", TEI_NS)
     if orth_w is None or ipa_w is None:
@@ -339,11 +303,10 @@ def extract_single_word(u, xml_filename, wav_ref, structural_seg, ipa_seg):
 
 
 def extract_sentence(u, xml_filename, wav_ref, structural_seg, ipa_seg, timeline):
-    """Behavior from extract_finetune_data_sentences.py, FIXED: per-word rows
-    now use each word's REAL timeline-resolved start/end (via `timeline`,
-    see build_timeline_map/get_word_map) instead of the literal digits in
-    its synch-ID string. The aggregate row is unaffected -- it always used
-    the <u>'s own start/end."""
+    """Sentence-type <u>: one row per matched orth/ipa word pair, each using
+    that word's own timeline-resolved start/end (via `timeline`, see
+    build_timeline_map/get_word_map), plus one aggregate row joining all
+    matched words in order using the <u>'s own start/end."""
     orth_words = get_word_map(structural_seg, timeline)
     ipa_words = get_word_map(ipa_seg, timeline)
     matched_keys = set(orth_words) & set(ipa_words)
@@ -386,10 +349,11 @@ def extract_sentence(u, xml_filename, wav_ref, structural_seg, ipa_seg, timeline
 
 
 def extract_whole_utterance(u, xml_filename, wav_ref, structural_seg, untokenized_seg, ipa_seg):
-    """Verbatim behavior from extract_finetune_data_myuc.py, generalized to
-    any non-ipa seg (not just notation="orth-ucsb"). Prefers the untokenized
-    seg's raw text for orth when one exists (cleaner than word-rejoining).
-    Unaffected by the timeline-resolution bug/fix."""
+    """Whole-utterance <u> (no per-word timing): one row using the <u>'s own
+    start/end, with orth/ipa text extracted via get_seg_text() (handles both
+    plain-text-in-seg and <w>-subdivided-seg shapes). Prefers the
+    untokenized seg's raw text for orth when one exists (cleaner than
+    word-rejoining)."""
     orth_source = untokenized_seg if untokenized_seg is not None else structural_seg
     orth_text = get_seg_text(orth_source)
     ipa_text = get_seg_text(ipa_seg)
