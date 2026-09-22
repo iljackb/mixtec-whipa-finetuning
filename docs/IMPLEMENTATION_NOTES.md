@@ -10,7 +10,7 @@ This document records what was and wasn't covered by WhIPA's own documentation w
 - **CUSTOM**: built from scratch, with no equivalent in WhIPA's code or documentation, because the task (working with an arbitrary custom corpus, rather than WhIPA's own benchmark corpora) is outside what WhIPA was designed to handle.
 - **HARDWARE ADAPTATION**: a substitution for a piece of WhIPA's own code that is CUDA-only and doesn't run on Apple Silicon.
 
-## Additional crucial information needed to implemnt the WHIPA (not explained in the documentation)
+## Additional crucial information needed to implement the WHIPA (not explained in the documentation)
 
 While the README documents inference with an existing pretrained checkpoint reasonably well (loading a `WHIPA` object, calling `transcribe_ipa()`), it does not document the following crucial information essential to implementation:
 
