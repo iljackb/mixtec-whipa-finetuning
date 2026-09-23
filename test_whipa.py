@@ -1,8 +1,15 @@
 """
-WhIPA test v4: segments each .wav file using the <u start="..." end="..."> boundaries
+WhIPA test v5: segments each .wav file using the <u start="..." end="..."> boundaries
 in its matching TEI XML, auto-resamples audio to 16kHz (Whisper's required rate),
 extracts mel features via WHIPA's own processor, runs transcribe_ipa() on each
 cropped token, and prints predicted IPA next to that token's own gold IPA.
+
+Fixes from v4:
+  - Also SAVES every token's result (file, token id, timing, orthography,
+    predicted IPA, raw gold IPA, normalized gold IPA) to a CSV via
+    --output-csv, instead of only printing to the terminal. This removes the
+    old copy-predictions-by-hand-into-score_test_results.py step -- that
+    script now reads this CSV directly (see score_test_results.py).
 
 Fixes from v3:
   - Actually resamples to 16kHz instead of just warning about mismatched rates
@@ -11,12 +18,15 @@ Fixes from v3:
 
 Usage:
     cd /path/to/whipa
-    python3 test_whipa.py --audio_dir test_data --xml_dir test_data --model jshrdt/whipa-large-cv --base_model_name openai/whisper-large-v2
+    python3 test_whipa.py --audio_dir test_data --xml_dir test_data \
+        --model jshrdt/whipa-large-cv --base_model_name openai/whisper-large-v2 \
+        --output-csv test_results.csv
 
 Requires: pip3 install scipy   (only needed for the resampling step)
 """
 
 import argparse
+import csv
 import sys
 from pathlib import Path
 
@@ -43,6 +53,11 @@ from normalize_ipa import normalize_for_training  # noqa: E402
 
 TEI_NS = {"tei": "http://www.tei-c.org/ns/1.0"}
 TARGET_SR = 16000
+
+CSV_FIELDNAMES = [
+    "wav_file", "token_n", "start", "end", "orth",
+    "predicted", "gold_raw", "gold_normalized",
+]
 
 
 def extract_tokens(xml_path: Path):
@@ -105,6 +120,10 @@ def main():
     ap.add_argument("--model", type=str, default="jshrdt/whipa-large-cv")
     ap.add_argument("--base_model_name", type=str, default="openai/whisper-large-v2")
     ap.add_argument("--lora", action="store_true", help="Set if using a lowhipa-* (LoRA) checkpoint")
+    ap.add_argument("--output-csv", type=str, default="test_results.csv",
+                     help="Where to save every token's prediction/gold pair, for "
+                          "score_test_results.py to score without manual copy-paste. "
+                          "Set to '' to disable and only print to the terminal.")
     args = ap.parse_args()
 
     audio_dir = Path(args.audio_dir)
@@ -117,6 +136,8 @@ def main():
 
     print(f"Loading model: {args.model} (base: {args.base_model_name}, lora={args.lora}) ...")
     whipa = WHIPA(model_path=args.model, base_model_name=args.base_model_name, lora=args.lora)
+
+    csv_rows = []
 
     for wav_path in wav_files:
         xml_path = xml_dir / (wav_path.stem + ".xml")
@@ -148,11 +169,34 @@ def main():
             except Exception as e:
                 prediction = f"[inference error: {e}]"
 
+            gold_raw = tok["ipa"]
+            gold_normalized = normalize_for_training(gold_raw)
+
             print(f"  Token {tok['n']} [{tok['start']:.2f}-{tok['end']:.2f}s]  orth: {tok['orth']}")
             print(f"    Predicted: {prediction}")
-            print(f"    Gold (raw):        {tok['ipa']}")
-            print(f"    Gold (normalized): {normalize_for_training(tok['ipa'])}")
+            print(f"    Gold (raw):        {gold_raw}")
+            print(f"    Gold (normalized): {gold_normalized}")
+
+            csv_rows.append({
+                "wav_file": wav_path.name,
+                "token_n": tok["n"],
+                "start": tok["start"],
+                "end": tok["end"],
+                "orth": tok["orth"],
+                "predicted": prediction,
+                "gold_raw": gold_raw,
+                "gold_normalized": gold_normalized,
+            })
         print()
+
+    if args.output_csv:
+        out_path = Path(args.output_csv)
+        with open(out_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=CSV_FIELDNAMES)
+            writer.writeheader()
+            writer.writerows(csv_rows)
+        print(f"Saved {len(csv_rows)} token results to {out_path}")
+        print(f"Next step: python3 score_test_results.py --input-csv {out_path}")
 
 
 if __name__ == "__main__":
