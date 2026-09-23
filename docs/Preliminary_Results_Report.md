@@ -4,8 +4,6 @@
 **Model:** LoRA fine-tune of `openai/whisper-large-v2`, using the WhIPA/LoWhIPA framework (Suchardt et al., 2025 EMNLP; code: github.com/jshrdt/whipa)
 **Checkpoint identifier:** `lowhipa-mixtec-v1`
 
-This is a copy. The canonical version of this report is maintained in Mixtepec_Mixtec/ASR-finetuning/.
-
 ---
 
 > **⚠️ Post-hoc data quality addendum (added 2026-09-21):** the 818-token
