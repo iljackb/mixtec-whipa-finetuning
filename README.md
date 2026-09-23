@@ -23,7 +23,7 @@ If you're trying to fine-tune WhIPA on your own custom corpus, read **[docs/IMPL
 
   - `run_prep_dataset.py`: applies WhIPA's own feature-extraction/tokenization functions to that dataset.
 
-  - `train_lora_mps.py`: LoRA fine-tuning script adapted for Apple Silicon (MPS), since WhIPA's own training script's PEFT path is CUDA-only (8-bit quantization via `bitsandbytes`).
+  - `train_lora_mps.py`: (**actual fine-tuning step**) LoRA fine-tuning script adapted for Apple Silicon (MPS), since WhIPA's own training script's PEFT path is CUDA-only (8-bit quantization via `bitsandbytes`).
 
   - `test_whipa.py`: inference/testing against a held-out set.
 

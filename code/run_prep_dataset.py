@@ -5,7 +5,7 @@ to the raw dataset built by build_finetune_dataset.py.
 WHY THIS SCRIPT EXISTS SEPARATELY:
   build_finetune_dataset.py deliberately does NOT precompute input_features or
   labels -- it just produces raw audio + the "ipa" text column. This script
-  imports your actual, real prep_dataset()/prepare_dataset_ipa() functions
+  imports the actual, real prep_dataset()/prepare_dataset_ipa() functions
   directly from whipa_utils.py and runs them on that raw dataset, so the
   feature extraction and tokenization are IDENTICAL to what fine_tune.py
   itself would do -- not a separate reimplementation that could subtly differ
