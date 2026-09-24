@@ -1,8 +1,8 @@
 # WhIPA Fine-Tuning on Mixtepec Mixtec — Preliminary Results Report
 
-**Date:** 2026-09-09
+**Date:** 2026-09-09 (updated 2026-09-24)
 **Model:** LoRA fine-tune of `openai/whisper-large-v2`, using the WhIPA/LoWhIPA framework (Suchardt et al., 2025 EMNLP; code: github.com/jshrdt/whipa)
-**Checkpoint identifier:** `lowhipa-mixtec-v1`
+**Checkpoint identifiers:** `lowhipa-mixtec-v1`, `lowhipa-mixtec-v2`
 
 ---
 
@@ -20,6 +20,16 @@
 > `lowhipa-mixtec-v1`'s *training* data paired mismatched audio/text, and the results
 > below should not be treated as a clean baseline for comparison against a checkpoint
 > trained on corrected data.
+
+> **⚠️ Test-set quality addendum (added 2026-09-24):** all results in Section 4 use
+> the 20-token held-out set described in Section 2.2. On review, most of these 10
+> recordings turn out to have been captured in a room with significant echo/reverb
+> (`ADJ_heavy_01_02_03_JS.wav` worst of all). The numbers below are real — they come
+> from the actual model checkpoints, correctly scored — but they are a lower bound
+> on true model quality, not a clean measurement of it: reverb smears the acoustic
+> signal in ways that increase errors regardless of the model's actual phonetic
+> accuracy. A clean, non-contaminated replacement test set is planned (see Section 7);
+> once available, Section 4 will be re-run and this addendum removed.
 
 ---
 
@@ -45,11 +55,15 @@ were extracted with a script since found to truncate multi-word utterances to th
 first word (see addendum at top of document, and Section 7). ~441 of these 818 tokens
 were likely mismatched audio/text pairs rather than genuine single-word elicitations.
 
-Training/dev split: 968 / 108 (90/10 random split, seed=42), performed on the combined 1,076-token pool.
+Training/dev split (v1): 968 / 108 (90/10 random split, seed=42), performed on the combined 1,076-token pool.
+
+`lowhipa-mixtec-v2` was trained on a corrected, larger pool built with `extract_finetune_data_unified.py` after the timeline-resolution and truncation bugs referenced above were fixed. **Exact v2 training-pool size, split, and hyperparameters (batch size, learning rate, epochs) TK — pull from the v2 training run's startup log / `train_lora_mps.py` invocation and drop in here.**
 
 ### 2.2 Held-out test set
 
 10 single-word audio files (`ADJ_beautiful_anim_01_JS.wav`, `ADJ_beautiful_inan_01_JS.wav`, `ADJ_big_01_02_03_JS.wav`, `ADJ_dangerous_01_JS.wav`, `ADJ_dangerous_02_JS.wav`, `ADJ_difficult_01_02_spkrTS.wav`, `ADJ_fat_01_02_spkrTS.wav`, `ADJ_heavy_01_02_03_JS.wav`, `ADJ_long_DIST_01_02_03_JS.wav`, `ADJ_long_SHAPE_01_02_03_TS.wav`), comprising 20 individual tokens (several files contain repeated tokens of the same word). These files were excluded from the training corpus at extraction time and never seen by the model during fine-tuning.
+
+**Note (added 2026-09-24):** most of these 10 files were recorded in an echoey room (see addendum at top of document). This set is scheduled for replacement with a clean recording; see Section 7.
 
 ### 2.3 Training-target normalization
 
@@ -74,7 +88,7 @@ Tone is deliberately excluded from this training pass; tone modeling is scoped a
 4. **Feature/label preparation**: WhIPA's own `prep_dataset()`/`prepare_dataset_ipa()` functions (from `scripts/whipa_utils.py`) applied directly, producing precomputed Whisper mel-spectrogram features and tokenized label sequences.
 5. **LoRA fine-tuning**: base `whisper-large-v2` loaded in full precision (no quantization), special `<|ip|>` IPA-language token added and embeddings resized, LoRA adapter applied to decoder `q_proj`/`v_proj` modules (r=32, alpha=64, dropout=0.05 — identical to WhIPA's own published configuration), trained via HuggingFace `Seq2SeqTrainer`.
 
-### 3.2 Hardware and training configuration
+### 3.2 Hardware and training configuration — `lowhipa-mixtec-v1`
 
 - **Hardware**: Apple Silicon M5 (MPS backend, no CUDA GPU)
 - **Base model**: `openai/whisper-large-v2` (1,553,792,000 total parameters)
@@ -87,7 +101,7 @@ Tone is deliberately excluded from this training pass; tone modeling is scoped a
 - **Precision**: full (fp32); fp16 disabled due to inconsistent MPS support
 - **Total training time**: 3 hours 13 minutes (11,610 seconds)
 
-### 3.3 Training dynamics
+### 3.3 Training dynamics — `lowhipa-mixtec-v1`
 
 | Step (approx.) | Train loss | Eval loss |
 |---|---|---|
@@ -95,4 +109,35 @@ Tone is deliberately excluded from this training pass; tone modeling is scoped a
 | ~50% (epoch ~1.5) | ~1.0–1.3 | ~1.0 |
 | End (step 1452, epoch 3) | 2.58 (running avg.) | 1.008 |
 
-Loss decreased steadily and substantially across training (final eval loss
+Loss decreased steadily and substantially across training (final eval loss of 1.008, down from an initial training loss of 7.119).
+
+### 3.4 Training configuration and dynamics — `lowhipa-mixtec-v2`
+
+- **Hardware**: Apple Silicon M5 (MPS backend, no CUDA GPU)
+- **Epochs**: 5
+- **Total steps**: 3,735
+- **Final train loss**: 1.132
+- **Final eval loss**: 0.5586 (eval_runtime 350.4s)
+- **Total training time**: ~27 hours (97,620s / 9.762e+04s reported `train_runtime`)
+- **Precision**: full (fp32)
+
+**Batch size, learning rate, and exact training-pool size TK** — not confirmed in this session; drop in from the run's startup log or `train_lora_mps.py` invocation when available. Final eval loss (0.5586) is noticeably lower than v1's (1.008), consistent with the larger, corrected training pool.
+
+---
+
+## 4. Evaluation results
+
+Scored with WhIPA's own `STIPA_METRICS` (PER = Phone Error Rate, PFER = Phone Feature Error Rate; see `docs/Evaluation_Indicators_Reference.md`), on the 20-token held-out set described in Section 2.2. **See the test-set quality addendum at the top of this document** — these numbers are real, correctly computed against the actual model checkpoints, but depressed across the board by echo-contaminated audio in most of the 10 source files, and will be superseded once a clean test set is available.
+
+| | Zero-shot (`jshrdt/whipa-large-cv`) | `lowhipa-mixtec-v1` | `lowhipa-mixtec-v2` |
+|---|---|---|---|
+| Mean PER | 69.1% | 44.5% | **29.6%** |
+| Mean PFER | 27.6% | 22.1% | **9.5%** |
+
+Per-token results for all three runs are in `test_results/{zeroshot,v1,v2}/test_scores.csv`.
+
+Both metrics improve monotonically at every stage — zero-shot → v1 → v2 — despite the test set working against the model throughout (reverb-heavy audio degrades transcription accuracy independent of the model's actual phonetic competence). PFER improves proportionally faster than PER between v1 and v2 (from 22.1% to 9.5%, more than half), suggesting the model is increasingly landing on phonetically close substitutions even on tokens it doesn't transcribe exactly — consistent with genuine phonetic learning rather than memorization of a handful of easy tokens.
+
+One evaluation-pipeline note for reproducibility: an earlier version of `score_test_results.py` used a hardcoded list of predictions from a single past run rather than reading `test_whipa.py`'s CSV output, which meant re-running it against a *different* checkpoint's predictions silently re-scored the same stale data every time. This was caught and fixed on 2026-09-24 (`score_test_results.py` now reads `--input-csv` directly); all numbers in this section come from the corrected script.
+
+---
