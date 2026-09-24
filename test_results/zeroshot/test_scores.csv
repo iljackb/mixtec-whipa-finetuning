@@ -1,0 +1,23 @@
+wav_file,token_n,orth,predicted,gold_normalized,per,pfer
+ADJ_beautiful_anim_01_JS.wav,1,che'e,t͡ʃɛɛ,t͡ʃɛʔɛ,25.0,25.0
+ADJ_beautiful_inan_01_JS.wav,vii,vii,iː,vii,100.0,68.06
+ADJ_big_01_02_03_JS.wav,1,ka'nu,t͡ɕɛraɾɛmɯ,kaʔnũ,140.0,74.17
+ADJ_big_01_02_03_JS.wav,2,ka'nu,kaʔːɯ,kaʔnũ,60.0,24.17
+ADJ_big_01_02_03_JS.wav,3,ka'nu,kanun,kaʔnũ,60.0,22.92
+ADJ_dangerous_01_JS.wav,1,xeen,ʂɛ̃,ʃɛ̃ɛ̃,66.67,34.72
+ADJ_dangerous_02_JS.wav,1,xeen,ʂɛɾ,ʃɛ̃ɛ̃,100.0,12.5
+ADJ_difficult_01_02_spkrTS.wav,1,nchichi,d͡ʒit͡ɕi,nd͡ʒit͡ʃi,40.0,20.83
+ADJ_difficult_01_02_spkrTS.wav,2,nchich,d͡ʒit͡ɕi,nd͡ʒit͡ʃi,40.0,20.83
+ADJ_fat_01_02_spkrTS.wav,1,kochi,koit͡ɕːi,kot͡ʃi,50.0,27.08
+ADJ_fat_01_02_spkrTS.wav,2,kochi,ko̞t͡ɕːi,kot͡ʃi,50.0,2.08
+ADJ_heavy_01_02_03_JS.wav,1,vee,ʋɛɛ,vee,100.0,9.03
+ADJ_heavy_01_02_03_JS.wav,2,vee,be̞,vee,100.0,36.11
+ADJ_heavy_01_02_03_JS.wav,3,vee,bɛ,vee,100.0,37.5
+ADJ_long_DIST_01_02_03_JS.wav,1,nani,n̪aːnːi,nani,75.0,3.12
+ADJ_long_DIST_01_02_03_JS.wav,2,nani,näɴni,nani,50.0,25.0
+ADJ_long_DIST_01_02_03_JS.wav,3,nani,näɾnːi,nani,75.0,26.04
+ADJ_long_SHAPE_01_02_03_TS.wav,1,kani,kaɾɲi,kani,50.0,28.65
+ADJ_long_SHAPE_01_02_03_TS.wav,2,kani,kaɳɳi,kani,50.0,26.56
+ADJ_long_SHAPE_01_02_03_TS.wav,3,kani,kaɳɳi,kani,50.0,26.56
+,,,,,,
+MEAN,"n=20 scored, 0 errors",whipa-zeroshot,,,69.08,27.55
