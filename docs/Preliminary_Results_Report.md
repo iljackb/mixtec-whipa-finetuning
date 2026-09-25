@@ -22,15 +22,12 @@
 > below should not be treated as a clean baseline for comparison against a checkpoint
 > trained on corrected data.
 
-> **⚠️ Test-set quality addendum (added 2026-09-24):** all results in Section 4 use
-> the 20-token held-out set described in Section 2.2. On review, most of these 10
-> recordings turn out to have been captured in a room with significant echo/reverb
-> (`ADJ_heavy_01_02_03_JS.wav` worst of all). The numbers below are real — they come
-> from the actual model checkpoints, correctly scored — but they are a lower bound
-> on true model quality, not a clean measurement of it: reverb smears the acoustic
-> signal in ways that increase errors regardless of the model's actual phonetic
-> accuracy. A clean, non-contaminated replacement test set is planned (see Section 7);
-> once available, Section 4 will be re-run and this addendum removed.
+> **⚠️ Test-set quality addendum — superseded 2026-09-25:** the original 20-token
+> held-out set (most of it echo/reverb-contaminated) has been replaced. Six
+> confirmed-bad files were moved into the training pool; four clean files were
+> kept and four new, higher-quality recordings were added, split into a
+> single-word track (n=8) and a new phrase-level track (n=11). See Section 2.2
+> and the current results in Section 4.
 
 ---
 
@@ -41,8 +38,6 @@ Evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model
 ---
 
 ## 2. Data
-
-## 2.1 Training corpus
 
 ## 2.1 Training corpus
 
@@ -73,8 +68,6 @@ Evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model
 **Note (2026-09-25):** the transcription added to the training set deriving from the "I work with bees" recording (`MYUC-1042`) differs from the rest of the corpus. The rest of the dataset is consistently segmented in the TEI/XML by complete sentence, phrase, or word, with each lexical item labeled as its own `<w>` element carrying its own time alignment. This content, however, was originally transcribed in larger chunks, and because it comes from natural, casual speech, it wasn't always segmented into complete sentences. When integrating it into the TEI/XML, I kept these chunks as-is, with time alignment coming only from the original, almost exclusively multi-word segment boundaries, rather than per-word. Structurally, this means these `<u>` elements carry no per-word `<w synch>` timing, only a single utterance-level span; `extract_finetune_data_unified.py` accordingly classifies them as `"whole-utterance"` rather than `"sentence"` type. This adds meaningful diversity to the training data: continuous, naturally paced speech rather than isolated elicited tokens.
 
 Training/dev split (v1): 968 / 108 (90/10 random split, seed=42), performed on the combined 1,076-token pool.
-
-**Note:** `lowhipa-mixtec-v2` was trained on a corrected, larger pool built with `extract_finetune_data_unified.py` after the timeline-resolution and truncation bugs referenced above were fixed. **Exact v2 training-pool size, split, and hyperparameters (batch size, learning rate, epochs) TK,  pull from the v2 training run's startup log / `train_lora_mps.py` invocation and drop in here.**
 
 ## 2.2 Held-out test set
 
