@@ -98,16 +98,22 @@ TEI_NS = {"tei": "http://www.tei-c.org/ns/1.0"}
 XML_NS_ID = "{http://www.w3.org/XML/1998/namespace}id"
 
 HELD_OUT = {
-    "ADJ_beautiful_anim_01_JS",
-    "ADJ_beautiful_inan_01_JS",
-    "ADJ_big_01_02_03_JS",
+    # current held-out test set (2026-09-24 refresh) -- excluded from training
     "ADJ_dangerous_01_JS",
     "ADJ_dangerous_02_JS",
     "ADJ_difficult_01_02_spkrTS",
     "ADJ_fat_01_02_spkrTS",
-    "ADJ_heavy_01_02_03_JS",
-    "ADJ_long_DIST_01_02_03_JS",
-    "ADJ_long_SHAPE_01_02_03_TS",
+    "190630_0048-hand-cactus",
+    "190630_0051-na'nu-ka'nu",
+    "190710_0257-ate-eat-will-eat",
+    "190710_0270-tell-the-truth",
+    # NOTE: the following 6 were removed from HELD_OUT on 2026-09-25 --
+    # confirmed echo-contaminated, unfit for TEST use, but fine to fold
+    # back into the TRAINING pool (echo hurts eval precision far more than
+    # it hurts a model learning robust features):
+    #   ADJ_beautiful_anim_01_JS, ADJ_beautiful_inan_01_JS,
+    #   ADJ_big_01_02_03_JS, ADJ_heavy_01_02_03_JS,
+    #   ADJ_long_DIST_01_02_03_JS, ADJ_long_SHAPE_01_02_03_TS
 }
 
 STANDALONE_TONE_CHARS = set(range(0x02E5, 0x02EA)) | {0x2197, 0x2198, 0x2219, 0xA71B, 0xA71C}

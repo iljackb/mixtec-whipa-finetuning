@@ -1,23 +1,23 @@
-wav_file,token_n,orth,predicted,gold_normalized,per,pfer
-ADJ_beautiful_anim_01_JS.wav,1,che'e,t͡ʃɛʔɛ,t͡ʃɛʔɛ,0.0,0.0
-ADJ_beautiful_inan_01_JS.wav,vii,vii,bii,vii,33.33,2.78
-ADJ_big_01_02_03_JS.wav,1,ka'nu,t͡sãːɾɾo,kaʔnũ,100.0,20.0
-ADJ_big_01_02_03_JS.wav,2,ka'nu,kãʔã̰ʔũ,kaʔnũ,60.0,27.08
-ADJ_big_01_02_03_JS.wav,3,ka'nu,kano,kaʔnũ,40.0,22.5
-ADJ_dangerous_01_JS.wav,1,xeen,ʃɛː,ʃɛ̃ɛ̃,66.67,36.11
-ADJ_dangerous_02_JS.wav,1,xeen,ʃɛː,ʃɛ̃ɛ̃,66.67,36.11
-ADJ_difficult_01_02_spkrTS.wav,1,nchichi,nd͡ʒit͡ʃi,nd͡ʒit͡ʃi,0.0,0.0
-ADJ_difficult_01_02_spkrTS.wav,2,nchich,nd͡ʒit͡ʃi,nd͡ʒit͡ʃi,0.0,0.0
-ADJ_fat_01_02_spkrTS.wav,1,kochi,kot͡ʃi,kot͡ʃi,0.0,0.0
-ADJ_fat_01_02_spkrTS.wav,2,kochi,koti,kot͡ʃi,25.0,4.17
-ADJ_heavy_01_02_03_JS.wav,1,vee,βɛʔe,vee,100.0,36.11
-ADJ_heavy_01_02_03_JS.wav,2,vee,beɛ,vee,66.67,4.17
-ADJ_heavy_01_02_03_JS.wav,3,vee,βee,vee,33.33,1.39
-ADJ_long_DIST_01_02_03_JS.wav,1,nani,nani,nani,0.0,0.0
-ADJ_long_DIST_01_02_03_JS.wav,2,nani,nani,nani,0.0,0.0
-ADJ_long_DIST_01_02_03_JS.wav,3,nani,nani,nani,0.0,0.0
-ADJ_long_SHAPE_01_02_03_TS.wav,1,kani,kani,kani,0.0,0.0
-ADJ_long_SHAPE_01_02_03_TS.wav,2,kani,kani,kani,0.0,0.0
-ADJ_long_SHAPE_01_02_03_TS.wav,3,kani,kani,kani,0.0,0.0
-,,,,,,
-MEAN,"n=20 scored, 0 errors",lowhipa-mixtec-v2,,,29.58,9.52
+wav_file,token_n,orth,n_words,track,predicted,gold_normalized,per,pfer
+190630_0048-hand-cactus.wav,1,tuxichi,1,single,tuşit͡ʃi,tuʃit͡ʃi,16.67,1.39
+190630_0051-na'nu-ka'nu.wav,1,naꞌnu,1,single,n,nãʔnũ,80.0,80.0
+190630_0051-na'nu-ka'nu.wav,2,ita naꞌnu,2,phrase,itanaʔnu,ita nãʔnũ,25.0,1.04
+190710_0257-ate-eat-will-eat.wav,1,,0,phrase,nd͡ʒat͡si na staa,nt͡sat͡si na staa,9.09,1.14
+190710_0257-ate-eat-will-eat.wav,2,,0,phrase,nd͡ʒat͡si na staa,nt͡sat͡si na staa,9.09,1.14
+190710_0257-ate-eat-will-eat.wav,3,,0,phrase,t͡sat͡sina staa,t͡sat͡si na staa,0.0,0.0
+190710_0257-ate-eat-will-eat.wav,4,,0,phrase,t͡sat͡sina staa,t͡sat͡si na staa,0.0,0.0
+190710_0257-ate-eat-will-eat.wav,5,,0,phrase,kuu katsi na staa,kũk̬at͡si na staa,41.67,17.71
+190710_0257-ate-eat-will-eat.wav,6,,0,phrase,kũŋk̬a t͡sina stãã,kũk̬at͡si na staa,25.0,9.03
+190710_0270-tell-the-truth.wav,1,ntakani ntai,2,phrase,ndaka nĩndai,ndakani ndai,9.09,0.38
+190710_0270-tell-the-truth.wav,2,ntakani ndaa yu,3,phrase,ndaka nindãʔi,ndakani ndaa ju,30.77,10.58
+190710_0270-tell-the-truth.wav,3,kuntakani ntaa yu,3,phrase,kũːnda kani ndaʔju,kundakani ndaa ju,13.33,2.22
+190710_0270-tell-the-truth.wav,4,ntakani ntai,2,phrase,nda kani ntai,ndakani ndai,9.09,0.38
+ADJ_dangerous_01_JS.wav,1,xeen,1,single,ʃɛː,ʃɛ̃ɛ̃,66.67,36.11
+ADJ_dangerous_02_JS.wav,1,xeen,1,single,ʃɛː,ʃɛ̃ɛ̃,66.67,36.11
+ADJ_difficult_01_02_spkrTS.wav,1,nchichi,1,single,nd͡ʒit͡ʃi,nd͡ʒit͡ʃi,0.0,0.0
+ADJ_difficult_01_02_spkrTS.wav,2,nchich,1,single,nd͡ʒit͡ʃi,nd͡ʒit͡ʃi,0.0,0.0
+ADJ_fat_01_02_spkrTS.wav,1,kochi,1,single,kot͡ʃi,kot͡ʃi,0.0,0.0
+ADJ_fat_01_02_spkrTS.wav,2,kochi,1,single,koti,kot͡ʃi,25.0,4.17
+,,,,,,,,
+MEAN_SINGLE_WORD,"n=8 scored, 0 errors",lowhipa-mixtec-v2,1,single,,,31.88,19.72
+MEAN_PHRASE_LEVEL,n=11 scored,lowhipa-mixtec-v2,>1,phrase,,,15.65,3.97

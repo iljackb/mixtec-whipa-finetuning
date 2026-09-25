@@ -1,21 +1,20 @@
-wav_file,token_n,start,end,orth,predicted,gold_raw,gold_normalized
-ADJ_beautiful_anim_01_JS.wav,1,0.0,1.28,che'e,t͡ʃe,tʃɛ˥ʔɛ↘,t͡ʃɛʔɛ
-ADJ_beautiful_inan_01_JS.wav,vii,0.13,0.66,vii,b,viː↘↗,vii
-ADJ_big_01_02_03_JS.wav,1,0.0,1.19,ka'nu,tano,ka˥ʔnũ˧,kaʔnũ
-ADJ_big_01_02_03_JS.wav,2,1.19,2.37,ka'nu,kãʔ̪n̪̪,ka˥ʔnũ˧,kaʔnũ
-ADJ_big_01_02_03_JS.wav,3,2.37,3.48,ka'nu,kano,ka˥ʔnũ˧,kaʔnũ
-ADJ_dangerous_01_JS.wav,1,0.0,0.9,xeen,ʃe,ʃɛ̃ː↗,ʃɛ̃ɛ̃
-ADJ_dangerous_02_JS.wav,1,0.0,0.85,xeen,ʃe,ʃɛ̃ː↗,ʃɛ̃ɛ̃
-ADJ_difficult_01_02_spkrTS.wav,1,0.0,1.44,nchichi,dʒitʃi,ndʒi˥tʃi↘,nd͡ʒit͡ʃi
-ADJ_difficult_01_02_spkrTS.wav,2,1.44,3.16,nchich,ndʒitʃi,ndʒi˥tʃi↘,nd͡ʒit͡ʃi
-ADJ_fat_01_02_spkrTS.wav,1,0.0,1.05,kochi,koçi,ko˧tʃi˩,kot͡ʃi
-ADJ_fat_01_02_spkrTS.wav,2,1.05,2.11,kochi,koʔçi,ko∙tʃi˩,kot͡ʃi
-ADJ_heavy_01_02_03_JS.wav,1,0.0,1.19,vee,vee,v↘↗eː,vee
-ADJ_heavy_01_02_03_JS.wav,2,1.19,2.28,vee,be,veː↘↗,vee
-ADJ_heavy_01_02_03_JS.wav,3,2.28,3.34,vee,beː,veː↘↗,vee
-ADJ_long_DIST_01_02_03_JS.wav,1,0.0,1.33,nani,nani,na˥ni↗,nani
-ADJ_long_DIST_01_02_03_JS.wav,2,1.33,2.7,nani,nani,na˥ni↗,nani
-ADJ_long_DIST_01_02_03_JS.wav,3,2.7,3.97,nani,nani,na˥ni↗,nani
-ADJ_long_SHAPE_01_02_03_TS.wav,1,0.0,1.17,kani,kani,ka˥ni↗,kani
-ADJ_long_SHAPE_01_02_03_TS.wav,2,1.17,2.49,kani,kani,ka˥ni↗,kani
-ADJ_long_SHAPE_01_02_03_TS.wav,3,2.49,3.79,kani,kani,ka˥ni↗,kani
+wav_file,token_n,start,end,orth,n_words,predicted,gold_raw,gold_normalized
+190630_0048-hand-cactus.wav,1,19.1,19.89,tuxichi,1,t̪uʃitʃi,tùʃitʃǐ,tuʃit͡ʃi
+190630_0051-na'nu-ka'nu.wav,1,7.84,8.31,naꞌnu,1,n,nã́ʔnũ,nãʔnũ
+190630_0051-na'nu-ka'nu.wav,2,9.59,10.3,ita naꞌnu,2,itana,itá nã́ʔnũ,ita nãʔnũ
+190710_0257-ate-eat-will-eat.wav,1,1.4,3.15,,0,dzat͡si,ntsàtsi nà stàǎ,nt͡sat͡si na staa
+190710_0257-ate-eat-will-eat.wav,2,3.52,5.04,,0,dzat͡sina,ntsàtsi nà stàǎ,nt͡sat͡si na staa
+190710_0257-ate-eat-will-eat.wav,3,6.72,8.12,,0,t͡sat͡sina,tsátsi nà stàǎ,t͡sat͡si na staa
+190710_0257-ate-eat-will-eat.wav,4,8.69,9.99,,0,t͡sãːt͡sãːt͡sãːt͡sãːt͡sãːt͡sãːt͡,tsátsi nà stàǎ,t͡sat͡si na staa
+190710_0257-ate-eat-will-eat.wav,5,11.1,12.49,,0,kũ,kṹk̬àtsi nà stàǎ,kũk̬at͡si na staa
+190710_0257-ate-eat-will-eat.wav,6,13.16,14.58,,0,kũũũ,kṹk̬àtsi nà stàǎ,kũk̬at͡si na staa
+190710_0270-tell-the-truth.wav,1,4.06,5.26,ntakani ntai,2,ndaka,ndakànì ndaî,ndakani ndai
+190710_0270-tell-the-truth.wav,2,28.99,30.24,ntakani ndaa yu,3,ndaka,ndakanì ndaa jù,ndakani ndaa ju
+190710_0270-tell-the-truth.wav,3,46.26,48.12,kuntakani ntaa yu,3,kunda,kúndakanì ndaa jù,kundakani ndaa ju
+190710_0270-tell-the-truth.wav,4,58.83,59.93,ntakani ntai,2,ndakani,ndàkani ndaî,ndakani ndai
+ADJ_dangerous_01_JS.wav,1,0.0,0.9,xeen,1,ʃe,ʃɛ̃ː↗,ʃɛ̃ɛ̃
+ADJ_dangerous_02_JS.wav,1,0.0,0.85,xeen,1,ʃe,ʃɛ̃ː↗,ʃɛ̃ɛ̃
+ADJ_difficult_01_02_spkrTS.wav,1,0.0,1.44,nchichi,1,dʒitʃi,ndʒi˥tʃi↘,nd͡ʒit͡ʃi
+ADJ_difficult_01_02_spkrTS.wav,2,1.44,3.16,nchich,1,ndʒitʃi,ndʒi˥tʃi↘,nd͡ʒit͡ʃi
+ADJ_fat_01_02_spkrTS.wav,1,0.0,1.05,kochi,1,koçi,ko˧tʃi˩,kot͡ʃi
+ADJ_fat_01_02_spkrTS.wav,2,1.05,2.11,kochi,1,koʔçi,ko∙tʃi˩,kot͡ʃi
