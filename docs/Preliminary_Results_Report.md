@@ -7,30 +7,6 @@
 
 ---
 
-> **⚠️ Post-hoc data quality addendum (added 2026-09-21):** the 818-token
-> `transcriptions-xml/` figure in Section 2.1 was produced by an extraction script
-> (`extract_finetune_data.py`) later found to have a bug: it silently truncated
-> every multi-word utterance to its first word while keeping the *entire* utterance's
-> audio span as the timestamp. Independent structural classification of the source
-> corpus found that ~441 of these 818 "single-word" tokens (54%) were actually drawn
-> from multi-word sentences, not single-word elicitations as described below. See
-> the note in Section 2.1 and the new bullet in Section 7 for detail. This does not
-> invalidate the pipeline, methodology, or evaluation metrics documented here — the
-> held-out test set (Section 2.2) was unaffected, since it was verified against
-> genuinely single-word files — but it means a meaningful fraction of
-> `lowhipa-mixtec-v1`'s *training* data paired mismatched audio/text, and the results
-> below should not be treated as a clean baseline for comparison against a checkpoint
-> trained on corrected data.
-
-> **⚠️ Test-set quality addendum — superseded 2026-09-25:** the original 20-token
-> held-out set (most of it echo/reverb-contaminated) has been replaced. Six
-> confirmed-bad files were moved into the training pool; four clean files were
-> kept and four new, higher-quality recordings were added, split into a
-> single-word track (n=8) and a new phrase-level track (n=11). See Section 2.2
-> and the current results in Section 4.
-
----
-
 ## 1. Objective
 
 Evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model, using a small existing corpus of Mixtepec Mixtec phonetic transcriptions, improves automatic phonetic transcription accuracy relative to the same base model's zero-shot performance on this language. Mixtepec Mixtec is not represented in any of WhIPA's original training data (CommonVoice languages, Arabic Speech Corpus, THCHS-30 Mandarin), nor in any typologically similar training language.
