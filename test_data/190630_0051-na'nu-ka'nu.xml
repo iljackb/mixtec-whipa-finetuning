@@ -3,15 +3,15 @@
    <teiHeader>
       <fileDesc>
          <titleStmt>
-            <title>TEI output for file: ADJ_beautiful_inan_01_JS.wav</title>
+            <title>TEI output for file: 190630_0051-na_nu-ka_nu.wav</title>
             <respStmt>
+               <resp>Annotation</resp>
+               <resp>Encoding</resp>
                <name xml:id="JB">Jack Bowers</name>
-               <resp>Transcription</resp>
-               <resp>Data Modeling</resp>
             </respStmt>
             <respStmt>
                <resp>Speaker</resp>
-               <name>Jeremías Salazar</name>
+               <name xml:id="JS">Jeremías Salazar</name>
             </respStmt>
          </titleStmt>
          <publicationStmt>
@@ -25,7 +25,7 @@
             </availability>
          </publicationStmt>
          <sourceDesc>
-            <p>This file was converted from of the speech file <ptr target="praat-export:ADJ_beautiful_inan_01_JS.txt"/> which was extracted from the Praat TextGrid transcriptions of the speech file <media mimeType="wav" url="soundfiles-gen:ADJ_beautiful_inan_01_JS.wav"/>
+            <p>This is a record of the speech file  <media mimeType="wav" url="190710_0270-tell-the-truth.wav"/>
             </p>
          </sourceDesc>
          <sourceDesc>
@@ -34,21 +34,19 @@
                   <respStmt>
                      <resp>Recording</resp>
                      <resp>Elicitation</resp>
-                     <name>Myoung Shin</name>
+                     <name>Jack Bowers</name>
                   </respStmt>
                   <equipment>
-                     <ab>Unsure of recording devise used.</ab>
+                     <ab>Audio recorded using a Tascam DR-05X Linear PCM Recorder at a rate of 96kHz/24-bit.</ab>
                   </equipment>
                   <ab>
                      <location>
-                        <placeName>San José State University</placeName>
-                        <placeName>San José</placeName>
-                        <region>California</region>
-                        <country>USA</country>
+                        <placeName>Santiago Juxtlahuaca</placeName>
+                        <country>Mexico</country>
                      </location>
                   </ab>
-                  <date>2011-02-24</date>
-                  <ab>Content was recorded using <term ana="#elicitation-translation">Translation-based elicitation</term> using <lang>English</lang>.</ab>
+                  <date>2019-07-10</date>
+                  <ab>Content was recorded from <term ana="#elicitation-translation">Translation-based elicitation</term> from <lang>English</lang>.</ab>
                </recording>
             </recordingStmt>
          </sourceDesc>
@@ -78,7 +76,7 @@
                      <term>Elicitation:</term> speech act for the sole purpose of linguistic investigation. (A new type of speech event for most communities).</catDesc>
                   <category xml:id="elicitation-contextualizing">
                      <catDesc>
-                        <term>Contextualizing elicitation:</term> where native speakers are asked to provide contexts for an item or construction as prompted by the investigator.</catDesc>
+                        <term>Contextualizing elicitation:</term> where native speakers are asked to provide contexts for a item or construction as prompted by the investigator.</catDesc>
                   </category>
                   <category xml:id="elicitation-translation">
                      <catDesc>
@@ -86,67 +84,68 @@
                   </category>
                   <category xml:id="elicitation-judgement">
                      <catDesc>
-                        <term>Judgement:</term> where native speakers are asked to judge the acceptability of a given construction based on any aspect of language, e.g. grammar, etc.</catDesc>
+                        <term>Judgement:</term> where native speakers are asked to judge the acceptibility of a given construction based on any aspect of language, e.g. grammar, etc.</catDesc>
                   </category>
                </category>
             </taxonomy>
          </classDecl>
-         <listPrefixDef>
-            <prefixDef ident="praat-export"
-                       matchPattern="([a-zA-Z0-9]+)"
-                       replacementPattern="../media/speech-mix/with-txtgrd/#$1"/>
-            <prefixDef ident="soundfiles-gen"
-                       matchPattern="([a-zA-Z0-9]+)"
-                       replacementPattern="../media/speech-mix/with-txtgrd/#$1"/>
-            <prefixDef ident="soundfiles-oax"
-                       matchPattern="([a-zA-Z0-9]+)"
-                       replacementPattern="../oaxaca/#$1"/>
-            <prefixDef ident="stimuli"
-                       matchPattern="([a-zA-Z0-9]+)"
-                       replacementPattern="../media/stimuli/#$1"/>
-         </listPrefixDef>
       </encodingDesc>
+      <revisionDesc status="unfinished">
+         <list>
+            <item>
+               <note>Not all utterances in this recording have been transcribed</note>
+            </item>
+         </list>
+      </revisionDesc>
    </teiHeader>
    <text>
       <body>
          <timeline>
-            <when xml:id="T1" interval="0.13"/>
-            <when xml:id="T2" interval="0.26"/>
-            <when xml:id="T3" interval="0.27"/>
-            <when xml:id="T4" interval="0.66"/>
+            <when xml:id="T7.84" interval="7.84"/>
+            <when xml:id="T8.31" interval="8.31"/>
+            <when xml:id="T7.85" interval="7.85"/>
+            <when xml:id="T8.29" interval="8.29"/>
+            <when xml:id="T9.59" interval="9.59"/>
+            <when xml:id="T10.30" interval="10.30"/>
+            <when xml:id="T9.62" interval="9.62"/>
+            <when xml:id="T9.89" interval="9.89"/>
+            <when xml:id="T10.26" interval="10.26"/>
          </timeline>
          <annotationBlock>
-            <u who="#"
-               xml:id="d1e33"
-               n="vii"
-               start="0.13"
-               end="0.66"
-               xml:lang="mix">
-               <seg xml:lang="mix" xml:id="d1e34" notation="orth">
-                  <w xml:id="d1e35" synch="#T1">vii</w>
+            <u n="1" xml:id="d13e0" start="7.84" end="8.31">
+               <seg xml:lang="mix" xml:id="T-mx-7.84" synch="7.84" notation="orth">
+                  <w synch="#T7.85 #T8.29" xml:id="T-o-7.85">naꞌnu</w>
                </seg>
-               <seg xml:lang="mix" xml:id="d1e37" notation="ipa">
-                  <w xml:id="d1e38" synch="#T1">viː<m xml:id="d1e135">↘↗</m>
-                  </w>
+               <seg function="utterance"
+                    xml:lang="mix"
+                    notation="ipa"
+                    xml:id="T-ipa-7.84">
+                  <w synch="#T7.85 #T8.29" xml:id="T-p-7.85">nã́ʔnũ</w>
                </seg>
+               <spanGrp type="annotations">
+                  <span xml:lang="en" target="#" type="translation">big</span>
+                  <span xml:lang="es" target="#" type="translation">grande</span>
+               </spanGrp>
             </u>
-            <spanGrp type="praatGloss">
-               <span from="#T1" to="#T4">ADJ-ANIM.beautiful</span>
-            </spanGrp>
-            <spanGrp type="gram">
-               <span target="#d1e35 #d1e38" type="pos" ana="#ADJ"/>
-            </spanGrp>
-            <spanGrp type="semantics">
-               <span target="#d1e35 #d1e38" type="domain" cert="low" ana="#INANIM">ANIM</span>
-            </spanGrp>
-            <spanGrp type="annotations">
-               <span target="#d1e35 #d1e38" xml:lang="en" type="translation">beautiful, pretty</span>
-               <!-- span type="phoneitc" orth-->
-               <span target="#d1e35 #d1e38"
-                     xml:lang="es"
-                     cert="low"
-                     type="translation">bonita, bonito</span>
-            </spanGrp>
+         </annotationBlock>
+         <annotationBlock>
+            <u n="2" xml:id="d17e0" start="9.59" end="10.30">
+               <seg xml:lang="mix" xml:id="T-mx-9.59" synch="9.59" notation="orth">
+                  <w synch="#T9.62 #T9.89" xml:id="T-o-9.62">ita</w>
+                  <w synch="#T9.89 #T10.26" xml:id="T-o-9.89">naꞌnu</w>
+               </seg>
+               <seg function="utterance"
+                    xml:lang="mix"
+                    notation="ipa"
+                    xml:id="T-ipa-9.59">
+                  <w synch="#T9.62 #T9.89" xml:id="T-p-9.62">itá</w>
+                  <w synch="#T9.89 #T10.26" xml:id="T-p-9.89">nã́ʔnũ</w>
+               </seg>
+               <spanGrp type="annotations">
+                  <span xml:lang="en" target="#" type="translation">big flower</span>
+                  <span xml:lang="es" target="#" type="translation">flor grande</span>
+               </spanGrp>
+            </u>
          </annotationBlock>
       </body>
    </text>

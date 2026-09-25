@@ -4,6 +4,17 @@ class (code/scripts/metrics.py) -- not a reimplementation, their exact PER/PFER
 computation.
 
 Fixes from the previous version:
+  - Splits results into two tracks -- single-word tokens vs. multi-word
+    (phrase-level) tokens -- based on the "n_words" column test_whipa.py now
+    records, and reports/saves a separate mean PER/PFER for each instead of
+    one mixed mean. A phrase's PER/PFER is computed over the whole cropped
+    <u> span exactly as before (test_whipa.py's extraction/transcription is
+    unchanged) -- this only changes how the RESULTS get grouped for
+    reporting. CSVs from before this change have no "n_words" column; those
+    rows are treated as single-word (accurate for the original test set,
+    which was single-word-only).
+
+Fixes from the version before that:
   - No more hand-copying predictions out of test_whipa.py's terminal output
     into a hardcoded RESULTS list. This now reads directly from the CSV that
     test_whipa.py's --output-csv writes (wav_file, token_n, start, end, orth,
@@ -33,12 +44,9 @@ from pathlib import Path
 
 from scripts.metrics import STIPA_METRICS
 
-INPUT_FIELDNAMES = [
-    "wav_file", "token_n", "start", "end", "orth",
-    "predicted", "gold_raw", "gold_normalized",
-]
 LOG_FIELDNAMES = [
-    "wav_file", "token_n", "orth", "predicted", "gold_normalized", "per", "pfer",
+    "wav_file", "token_n", "orth", "n_words", "track",
+    "predicted", "gold_normalized", "per", "pfer",
 ]
 
 
@@ -51,14 +59,36 @@ def load_results(input_csv: Path):
     return rows
 
 
+def track_for(row) -> str:
+    """"single" if the token is one word, "phrase" if multi-word. Rows from
+    before the n_words column existed default to "single" -- accurate for
+    the original test set, which was single-word-only."""
+    n_words = int(row.get("n_words") or 1)
+    return "single" if n_words == 1 else "phrase"
+
+
+def summarize(label: str, rows: list) -> dict | None:
+    per_list = [r["per"] for r in rows]
+    pfer_list = [r["pfer"] for r in rows]
+    if not per_list:
+        return None
+    mean_per = sum(per_list) / len(per_list)
+    mean_pfer = sum(pfer_list) / len(pfer_list)
+    print(f"\n{label}: n={len(rows)}")
+    print(f"  Mean PER:  {mean_per:.1f}%")
+    print(f"  Mean PFER: {mean_pfer:.1f}%")
+    return {"n": len(rows), "mean_per": mean_per, "mean_pfer": mean_pfer}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input-csv", type=str, default="../test_results.csv",
                      help="CSV produced by test_whipa.py's --output-csv")
     ap.add_argument("--output-log", type=str, default="../test_scores.csv",
-                     help="Where to save the per-token PER/PFER log plus a "
-                          "trailing summary line, for pulling numbers into a "
-                          "report. Set to '' to disable and only print.")
+                     help="Where to save the per-token PER/PFER log plus "
+                          "trailing summary lines (one per track), for "
+                          "pulling numbers into a report. Set to '' to "
+                          "disable and only print.")
     ap.add_argument("--model-name", type=str, default="",
                      help="Optional label recorded in the printed/saved summary "
                           "(e.g. 'lowhipa-mixtec-v2'), so scores from different "
@@ -81,46 +111,45 @@ def main():
     scored_rows = []
     error_rows = []
 
-    per_list = []
-    pfer_list = []
-
     label = f" ({args.model_name})" if args.model_name else ""
     print(f"Scoring {len(rows)} token(s) from {input_path}{label}")
-    print(f"{'wav_file':22} {'tok':4} {'PER%':>8} {'PFER%':>8}")
+    print(f"{'wav_file':22} {'tok':4} {'track':7} {'PER%':>8} {'PFER%':>8}")
 
     for row in rows:
         predicted = row["predicted"]
         gold = row["gold_normalized"]
+        track = track_for(row)
+        n_words = int(row.get("n_words") or 1)
 
         if predicted.startswith("[inference error:"):
             error_rows.append(row)
             continue
 
         m = eval_metrics.compute_all(pred=predicted, gold=gold, char_based=False)
-        per_list.append(m["per"])
-        pfer_list.append(m["pfer"])
 
-        print(f"{row['wav_file']:22} {row['token_n']:>4} {m['per']:8.1f} {m['pfer']:8.1f}")
+        print(f"{row['wav_file']:22} {row['token_n']:>4} {track:7} {m['per']:8.1f} {m['pfer']:8.1f}")
 
         scored_rows.append({
             "wav_file": row["wav_file"],
             "token_n": row["token_n"],
             "orth": row["orth"],
+            "n_words": n_words,
+            "track": track,
             "predicted": predicted,
             "gold_normalized": gold,
             "per": round(m["per"], 2),
             "pfer": round(m["pfer"], 2),
         })
 
-    if not per_list:
+    if not scored_rows:
         raise SystemExit("No scoreable rows (all were inference errors) -- nothing to report.")
 
-    mean_per = sum(per_list) / len(per_list)
-    mean_pfer = sum(pfer_list) / len(pfer_list)
+    single_rows = [r for r in scored_rows if r["track"] == "single"]
+    phrase_rows = [r for r in scored_rows if r["track"] == "phrase"]
 
-    print(f"\nScored {len(scored_rows)} token(s); {len(error_rows)} skipped (inference errors)")
-    print(f"Mean PER:  {mean_per:.1f}%")
-    print(f"Mean PFER: {mean_pfer:.1f}%")
+    print(f"\nScored {len(scored_rows)} token(s) total; {len(error_rows)} skipped (inference errors)")
+    single_summary = summarize("Single-word track", single_rows)
+    phrase_summary = summarize("Phrase-level track", phrase_rows)
 
     if args.output_log:
         out_path = Path(args.output_log)
@@ -128,16 +157,30 @@ def main():
             writer = csv.DictWriter(f, fieldnames=LOG_FIELDNAMES)
             writer.writeheader()
             writer.writerows(scored_rows)
-            writer.writerow({})  # blank separator before the summary line
-            writer.writerow({
-                "wav_file": "MEAN",
-                "token_n": f"n={len(scored_rows)} scored, {len(error_rows)} errors",
-                "orth": args.model_name,
-                "predicted": "",
-                "gold_normalized": "",
-                "per": round(mean_per, 2),
-                "pfer": round(mean_pfer, 2),
-            })
+            writer.writerow({})  # blank separator before the summary lines
+
+            if single_summary:
+                writer.writerow({
+                    "wav_file": "MEAN_SINGLE_WORD",
+                    "token_n": f"n={single_summary['n']} scored, {len(error_rows)} errors",
+                    "orth": args.model_name,
+                    "n_words": "1",
+                    "track": "single",
+                    "predicted": "", "gold_normalized": "",
+                    "per": round(single_summary["mean_per"], 2),
+                    "pfer": round(single_summary["mean_pfer"], 2),
+                })
+            if phrase_summary:
+                writer.writerow({
+                    "wav_file": "MEAN_PHRASE_LEVEL",
+                    "token_n": f"n={phrase_summary['n']} scored",
+                    "orth": args.model_name,
+                    "n_words": ">1",
+                    "track": "phrase",
+                    "predicted": "", "gold_normalized": "",
+                    "per": round(phrase_summary["mean_per"], 2),
+                    "pfer": round(phrase_summary["mean_pfer"], 2),
+                })
         print(f"\nSaved results log to {out_path}")
         print(f"(run at {datetime.now(timezone.utc).isoformat(timespec='seconds')})")
 

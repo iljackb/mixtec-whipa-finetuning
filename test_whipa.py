@@ -1,8 +1,16 @@
 """
-WhIPA test v5: segments each .wav file using the <u start="..." end="..."> boundaries
+WhIPA test v6: segments each .wav file using the <u start="..." end="..."> boundaries
 in its matching TEI XML, auto-resamples audio to 16kHz (Whisper's required rate),
 extracts mel features via WHIPA's own processor, runs transcribe_ipa() on each
 cropped token, and prints predicted IPA next to that token's own gold IPA.
+
+Fixes from v5:
+  - Records an "n_words" column per token (word count in the orthographic
+    <seg>), so score_test_results.py can report single-word and multi-word
+    (phrase-level) results as two separate tracks instead of one mixed mean.
+    This does NOT change how tokens are extracted or transcribed -- a <u>
+    with 3 <w> elements was already being cropped/transcribed as one unit;
+    this just records that fact so scoring can split on it.
 
 Fixes from v4:
   - Also SAVES every token's result (file, token id, timing, orthography,
@@ -55,7 +63,7 @@ TEI_NS = {"tei": "http://www.tei-c.org/ns/1.0"}
 TARGET_SR = 16000
 
 CSV_FIELDNAMES = [
-    "wav_file", "token_n", "start", "end", "orth",
+    "wav_file", "token_n", "start", "end", "orth", "n_words",
     "predicted", "gold_raw", "gold_normalized",
 ]
 
@@ -171,8 +179,10 @@ def main():
 
             gold_raw = tok["ipa"]
             gold_normalized = normalize_for_training(gold_raw)
+            n_words = len(tok["orth"].split())
 
-            print(f"  Token {tok['n']} [{tok['start']:.2f}-{tok['end']:.2f}s]  orth: {tok['orth']}")
+            print(f"  Token {tok['n']} [{tok['start']:.2f}-{tok['end']:.2f}s]  orth: {tok['orth']}"
+                  f"  ({n_words} word{'s' if n_words != 1 else ''})")
             print(f"    Predicted: {prediction}")
             print(f"    Gold (raw):        {gold_raw}")
             print(f"    Gold (normalized): {gold_normalized}")
@@ -183,6 +193,7 @@ def main():
                 "start": tok["start"],
                 "end": tok["end"],
                 "orth": tok["orth"],
+                "n_words": n_words,
                 "predicted": prediction,
                 "gold_raw": gold_raw,
                 "gold_normalized": gold_normalized,
