@@ -1,6 +1,6 @@
 # mixtec-whipa-finetuning
 
-Custom pipeline for fine-tuning [WhIPA](https://github.com/jshrdt/whipa) (a Whisper-based speech-to-IPA (STIPA) model) on Mixtepec Mixtec (Sa'an Savi), an under-resourced Otomanguean language with no prior representation in WhIPA's training data.
+Custom pipeline for fine-tuning [WhIPA](https://github.com/jshrdt/whipa) (a Whisper-based speech-to-IPA (STIPA) model) on Mixtepec Mixtec (Sà'án Sàvǐ), an under-resourced Otomanguean language with no prior representation in WhIPA's training data.
 
 This repo is the ASR/phonetic-transcription tooling side of a larger language documentation project. The linguistic corpus itself (TEI/XML transcriptions, dictionary, paradigms) lives separately at **[iljackb/Mixtepec_Mixtec](https://github.com/iljackb/Mixtepec_Mixtec)**: see that repo's `ASR-finetuning/` folder for versioned result reports and methodology documentation tied to specific training runs.
 
@@ -22,13 +22,15 @@ If you're trying to fine-tune WhIPA on your own custom corpus, read **[docs/IMPL
   - `train_lora_mps.py`: LoRA fine-tuning script adapted for Apple Silicon (MPS), since WhIPA's own training script's PEFT path is CUDA-only (8-bit quantization via `bitsandbytes`).
   - `test_whipa.py`: inference/testing against a held-out set.
   - `score_test_results.py`: evaluation via WhIPA's own `STIPA_METRICS` (PER/PFER), scoring the predictions `test_whipa.py` just produced.
-## Why a separate repo
-
-The corpus (`Mixtepec_Mixtec`) and this tooling are different in kind: one is linguistic data, the other is a Python codebase with its own dependencies and development workflow: so they're kept as separate, cross-linked repos rather than combined.
+  - 
 
 ## Status
 
-First working fine-tuned checkpoint (`lowhipa-mixtec-v1`) trained on 1,076 tokens; results and methodology documented in `Mixtepec_Mixtec/ASR-finetuning/`.
+- First working fine-tuned checkpoint (`lowhipa-mixtec-v1`) trained on 1,076 tokens;
+
+- Second working fine-tuned checkpoint (`lowhipa-mixtec-v2`) trained on 3,321 tokens;
+
+See detailed documentation, latest results as well as status of the fine tuning and testing in [WhIPA Fine-Tuning on Mixtepec Mixtec: Preliminary Results Report](https://github.com/iljackb/mixtec-whipa-finetuning/blob/main/docs/Preliminary_Results_Report.md)
 
 ### Note:
 This system was implemented (and debugged) with AI assistance from Claude

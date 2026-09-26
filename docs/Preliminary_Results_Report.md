@@ -1,23 +1,39 @@
-# WhIPA Fine-Tuning on Mixtepec Mixtec: Preliminary Results Report
+# WhIPA Fine-Tuning on Mixtepec Mixtec (Sà'án Sàvǐ): Preliminary Results Report
 
 **Author:** Jack Bowers
+
 **Date:** 2026-09-09 (updated 2026-09-24)
+
 **Model:** LoRA fine-tune of `openai/whisper-large-v2`, using the WhIPA/LoWhIPA framework (Suchardt et al., 2025 EMNLP; code: github.com/jshrdt/whipa)
-**Checkpoint identifiers:** `lowhipa-mixtec-v1`, `lowhipa-mixtec-v2`
+
+**Checkpoint identifiers:** 
+- `lowhipa-mixtec-v1`(2026/09/15)
+- `lowhipa-mixtec-v2`(2026/09/23)
 
 ---
 
 ## 1. Objective
 
-Evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model, using a small existing corpus of Mixtepec Mixtec phonetic transcriptions, improves automatic phonetic transcription accuracy relative to the same base model's zero-shot performance on this language. Mixtepec Mixtec is not represented in any of WhIPA's original training data (CommonVoice languages, Arabic Speech Corpus, THCHS-30 Mandarin), nor in any typologically similar training language.
+Preliminarily, the objective of this work has been to evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model, using a small existing corpus of Mixtepec Mixtec phonetic transcriptions, improves automatic phonetic transcription accuracy relative to the same base model's zero-shot performance on this language. Neither Mixtepec Mixtec, any other Otomanguean language, nor any other typologically similar language appears in WhIPA's original training data (CommonVoice languages, Arabic Speech Corpus, THCHS-30 Mandarin).
+
+We are expanding the fine-tuning corpus iteratively, incorporating new source material at each stage. The near-term goal is continued accuracy improvement through this expansion; the longer-term goal is to deploy the model as part of a human-in-the-loop transcription workflow, addressing the backlog of untranscribed recordings typical of language documentation projects. While that workflow integration is out of scope for the current phase, and would require additional tooling beyond fine-tuning itself, the target is model robustness and concrete usefulness, not just headline accuracy. Namely, to create a model that generalizes across recording conditions, speakers, and utterance types is a prerequisite for trusting it inside a human-reviewed pipeline.
+
+### 1.2 Status Overview
+
+After the first two fine-tuning stages, the question of whether adding our moderately small quantity of transcripts is clearly _yes_.
+
+For single-word transcriptions, the PER accuracy of v2 improved 46.5% over zero-shot (59.58 -> 31.88) and 
+the PFER accuracy of v2 improved 21.2% over zero-shot (25.02% -> 19.72%) (note that PFER is the more phonologically significant metric given that it considers phonologically meaningful features (eg. voicing, place of articulation,etc), not just a raw count of string differences). For phrase-level transcriptions, the PER accuracy of v2 improved 73.1% over zero-shot (58.21% -> 15.65%) and the PFER accuracy of v2 improved 79.2% over zero-shot (19.06% -> 3.97%).
+
+An important caveat to the results is that the metrics of the v1 fine tuning were significantly worse than the original zero shot. This was due to the fact that the 818-token dataset was extracted with a script since found to truncate multi-word utterances to their first word. 441 of those 818 tokens were likely mismatched audio/text pairs rather than genuine single-word elicitations. This is corrected in the v2 pool above (2,513 tokens, word-level extraction of multi-word sentences).
 
 ---
 
 ## 2. Data
 
-## 2.1 Training corpus
+### 2.1 Training corpus
 
-**v1 training pool** (pre-truncation-fix; predates integration of the AILLA "Documentation of Mixtepec Mixtec" collection⁴):
+**v1 training pool**  (pre-truncation-fix):
 
 | Source | Tokens | Description |
 |---|---|---|
@@ -25,7 +41,7 @@ Evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model
 | SIL "Aprendamos" materials (Lección 01–05) | 264 | Word-level tokens from sentence-level elicitation recordings |
 | **Total** | **1,082** (1,076 with resolvable audio) | 6 tokens excluded: audio file not locatable |
 
-**v2 training pool** (corrected extraction via `extract_finetune_data_unified.py`, includes AILLA):
+**v2 training pool** (corrected extraction via `extract_finetune_data_unified.py`, includes "I work with Bees" Martínez López et. al (2026)):
 
 | Source | Tokens (raw extraction) | Description |
 |---|---|---|
@@ -36,19 +52,20 @@ Evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model
 | **Total training tokens (resolvable audio, confirmed via dataset row count)** | **3,321** | 2,988 train / 333 dev (90/10 split) |
 
 ¹ Bowers, J., Salazar, J., & Salazar, T. (2019). *Mixtepec Mixtec Language Resources* (V4) [Data set]. Harvard Dataverse. https://doi.org/10.7910/DVN/BF2VNK
-² Includes Lección 06 (stray duplicate of 05, excluded) and Lección 11 (unfinished, not yet transcribed) — neither contributes tokens.
-³ Martínez López, G. (Speaker), Salazar, J. (Transcriber/Translator/Annotator), Belmar Viernes, G. (Transcriber/Annotator/Researcher/Editor), Aguilar, V. (Recorder/Interviewer), Salazar, C. (Interviewer/Interpreter), López Santiago, D. (Illustrator), & Campbell, E. (Transcriber). (2022). *I work with bees. Documentation of Mixtepec Mixtec* [Data set]. The Archive of the Indigenous Languages of Latin America (AILLA). PID Set 27418. https://www.ailla.utexas.org/sets/27418/ (Accessed 25 September 2026.)
-⁴ Salazar, J., & Belmar Viernes, G. *Documentation of Mixtepec Mixtec* [Data collection]. The Archive of the Indigenous Languages of Latin America (AILLA). PID Collection 2123. https://www.ailla.utexas.org/ (Accessed 25 September 2026.)
 
-**Note (added 2026-09-21):** the 818-token v1-era `transcriptions-xml/` figure above was extracted with a script since found to truncate multi-word utterances to their first word. ~441 of those 818 tokens were likely mismatched audio/text pairs rather than genuine single-word elicitations. This is corrected in the v2 pool above (2,513 tokens, word-level extraction of multi-word sentences).
+² Includes Lección 06 (stray duplicate of 05, excluded) and Lección 11 (unfinished, not yet transcribed) — neither contributes tokens.
+
+³ Martínez López, G. (Speaker), Salazar, J. (Transcriber/Translator/Annotator), Belmar Viernes, G. (Transcriber/Annotator/Researcher/Editor), Aguilar, V. (Recorder/Interviewer), Salazar, C. (Interviewer/Interpreter), López Santiago, D. (Illustrator), & Campbell, E. (Transcriber). (2022). *I work with bees. Documentation of Mixtepec Mixtec* [Data set]. The Archive of the Indigenous Languages of Latin America (AILLA). PID Set 27418. https://www.ailla.utexas.org/sets/27418/ (Accessed 25 September 2026.)
+
+⁴ Salazar, J., & Belmar Viernes, G. *Documentation of Mixtepec Mixtec* [Data collection]. The Archive of the Indigenous Languages of Latin America (AILLA). PID Collection 2123. https://www.ailla.utexas.org/ (Accessed 25 September 2026.)
 
 **Note (2026-09-25):** the transcription added to the training set deriving from the "I work with bees" recording (`MYUC-1042`) differs from the rest of the corpus. The rest of the dataset is consistently segmented in the TEI/XML by complete sentence, phrase, or word, with each lexical item labeled as its own `<w>` element carrying its own time alignment. This content, however, was originally transcribed in larger chunks, and because it comes from natural, casual speech, it wasn't always segmented into complete sentences. When integrating it into the TEI/XML, I kept these chunks as-is, with time alignment coming only from the original, almost exclusively multi-word segment boundaries, rather than per-word. Structurally, this means these `<u>` elements carry no per-word `<w synch>` timing, only a single utterance-level span; `extract_finetune_data_unified.py` accordingly classifies them as `"whole-utterance"` rather than `"sentence"` type. This adds meaningful diversity to the training data: continuous, naturally paced speech rather than isolated elicited tokens.
 
 Training/dev split (v1): 968 / 108 (90/10 random split, seed=42), performed on the combined 1,076-token pool.
 
-## 2.2 Held-out test set
+### 2.2 Held-out test set
 
-**Refreshed 2026-09-25.** The original 10-file set (2.2, pre-2026-09-24) was found to be substantially echo/reverb-contaminated. Six files were confirmed unsuitable for evaluation and moved into the training pool instead (echo degrades eval precision but not training robustness); the remaining 4 were kept, and 4 newly recorded, higher-quality files were added.
+**Refreshed 2026-09-25.** The original 10-file set (2.2, pre-2026-09-24) was found to be substantially echo/reverb-contaminated. Six files were confirmed unsuitable for evaluation and moved into the training pool instead (echo degrades eval precision but not training robustness); the remaining 4 were kept, and 4 newly recorded, higher-quality files were added, this is why the test set is ony 19 tokens.
 
 **Current set: 8 files, split into two evaluation tracks:**
 
@@ -63,11 +80,17 @@ Training/dev split (v1): 968 / 108 (90/10 random split, seed=42), performed on t
 
 ### 2.3 Training-target normalization
 
-Gold IPA transcriptions in the source corpus follow several inconsistent notational conventions (see Section 5 and the accompanying "IPA Transcription Guidelines" document for full detail). Before use as training targets, all gold IPA strings were normalized via a fixed pipeline (`normalize_ipa.py`):
+Gold IPA transcriptions in some of the source corpus follow several inconsistent notational conventions (see [IPA Transcription Guidelines](https://github.com/iljackb/mixtec-whipa-finetuning/blob/main/docs/IPA_Transcription_Guidelines.md)" document for full detail). Before use as training targets, all gold IPA strings were normalized via a fixed pipeline (`normalize_ipa.py`):
 
 1. **Tone-stripping**: all tone/suprasegmental marks removed (Chao tone letters, contour arrows, indeterminate-tone marker, downstep, combining tone diacritics). Segmental features (nasalization, length, glottal stop, dental diacritics) explicitly preserved.
-2. **Affricate normalization**: precomposed ligatures (ʧ, ʤ, ʦ, ʣ) converted to plain two-character sequences (tʃ, dʒ, ts, dz). No tie-bar insertion (see Section 6, decision reversal).
+
+
+2. **Affricate normalization**: precomposed ligatures (ʧ, ʤ, ʦ, ʣ) converted to plain two-character sequences (tʃ, dʒ, ts, dz). No tie-bar insertion.
+
+
 3. **Vowel-length normalization**: `Vː` (vowel + IPA length mark) converted to `VV` (doubled vowel letter), correctly handling nasalized/diacritic-bearing vowels (e.g. `ɛ̃ː` → `ɛ̃ɛ̃`, not `ɛɛ̃`).
+
+
 4. **Creakiness normalization**: creaky-voice diacritic (U+0330) stripped when adjacent to `ʔ` (redundant coarticulatory effect); retained otherwise. Confirmed via direct consultation that creaky voice in this corpus occurs only adjacent to `/ʔ/`, never independently.
 
 Tone is deliberately excluded from this training pass; tone modeling is scoped as a separate, later phase.
@@ -79,9 +102,17 @@ Tone is deliberately excluded from this training pass; tone modeling is scoped a
 ### 3.1 Pipeline overview
 
 1. **Extraction**: TEI/XML transcriptions parsed to extract token-level orthography, gold IPA, and precise start/end audio timestamps. Two extraction paths were required due to differing source-corpus structures (single-word-per-utterance vs. multi-word-per-utterance).
+
+
 2. **Audio verification**: cross-referenced every token's expected audio filename against actual files on disk across multiple candidate directories, resolving naming inconsistencies (space vs. underscore separators, missing `<media>` references).
+
+
 3. **Dataset construction**: audio cropped to each token's exact time span, resampled to 16kHz (Whisper's required input rate), packaged into a HuggingFace `datasets.Dataset` with the raw `audio` array and normalized `ipa` text column.
+
+
 4. **Feature/label preparation**: WhIPA's own `prep_dataset()`/`prepare_dataset_ipa()` functions (from `scripts/whipa_utils.py`) applied directly, producing precomputed Whisper mel-spectrogram features and tokenized label sequences.
+
+
 5. **LoRA fine-tuning**: base `whisper-large-v2` loaded in full precision (no quantization), special `<|ip|>` IPA-language token added and embeddings resized, LoRA adapter applied to decoder `q_proj`/`v_proj` modules (r=32, alpha=64, dropout=0.05 — identical to WhIPA's own published configuration), trained via HuggingFace `Seq2SeqTrainer`.
 
 ### 3.2 Hardware and training configuration — `lowhipa-mixtec-v1`
@@ -184,7 +215,7 @@ Per-token results for all three runs are in `test_results/{zeroshot,v1,v2}/test_
 
 One evaluation-pipeline note for reproducibility: an earlier version of `score_test_results.py` used a hardcoded list of predictions from a single past run rather than reading `test_whipa.py`'s CSV output, which meant re-running it against a *different* checkpoint's predictions silently re-scored the same stale data every time. This was caught and fixed on 2026-09-24; all numbers above come from the corrected script.
 
-> **Historical note (superseded 2026-09-25):** results below used the original 20-token test set later found to be substantially echo-contaminated. Kept for audit-trail purposes only — not for citation.
+> **Historical note (superseded 2026-09-25):** results below used the original 20-token test set later found to be substantially echo-contaminated. Kept for audit-trail purposes only, not for citation.
 >
 > | | Zero-shot | v1 | v2 |
 > |---|---|---|---|
