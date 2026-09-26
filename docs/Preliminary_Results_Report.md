@@ -17,7 +17,7 @@ Evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model
 
 ## 2.1 Training corpus
 
-**v1 training pool** (pre-truncation-fix, pre-AILLA):
+**v1 training pool** (pre-truncation-fix; predates integration of the AILLA "Documentation of Mixtepec Mixtec" collection⁴):
 
 | Source | Tokens | Description |
 |---|---|---|
@@ -31,13 +31,14 @@ Evaluate whether LoRA fine-tuning of a Whisper-based speech-to-IPA (STIPA) model
 |---|---|---|
 | Mixtepec Mixtec Language Resources (Bowers, Salazar & Salazar, 2019)¹ — `transcriptions-xml/` | 2,513 | Elicited words/phrases/sentences; corrected extraction now captures multi-word sentences at word level (previously truncated) |
 | SIL "Aprendamos" materials (Lecciónes 01–05, 07–10, 12)² | 564 | Word-level tokens from sentence-level elicitation recordings |
-| AILLA "I work with bees" set (Martínez López et al., 2022)³ — `MYUC-1042` | 269 | Continuous natural-speech recording (not elicited); transcribed/annotated by Salazar, Belmar Viernes, Campbell et al. |
+| AILLA "I work with bees" item (Martínez López et al., 2022)³, from the broader "Documentation of Mixtepec Mixtec" collection⁴ — `MYUC-1042` | 269 | Continuous natural-speech recording (not elicited) orthographically transcribed & annotated by Salazar, Belmar Viernes, Campbell et al.; IPA transcriptions added by Jack Bowers |
 | **Total (raw extraction)** | **3,346** | |
 | **Total training tokens (resolvable audio, confirmed via dataset row count)** | **3,321** | 2,988 train / 333 dev (90/10 split) |
 
 ¹ Bowers, J., Salazar, J., & Salazar, T. (2019). *Mixtepec Mixtec Language Resources* (V4) [Data set]. Harvard Dataverse. https://doi.org/10.7910/DVN/BF2VNK
 ² Includes Lección 06 (stray duplicate of 05, excluded) and Lección 11 (unfinished, not yet transcribed) — neither contributes tokens.
 ³ Martínez López, G. (Speaker), Salazar, J. (Transcriber/Translator/Annotator), Belmar Viernes, G. (Transcriber/Annotator/Researcher/Editor), Aguilar, V. (Recorder/Interviewer), Salazar, C. (Interviewer/Interpreter), López Santiago, D. (Illustrator), & Campbell, E. (Transcriber). (2022). *I work with bees. Documentation of Mixtepec Mixtec* [Data set]. The Archive of the Indigenous Languages of Latin America (AILLA). PID Set 27418. https://www.ailla.utexas.org/sets/27418/ (Accessed 25 September 2026.)
+⁴ Salazar, J., & Belmar Viernes, G. *Documentation of Mixtepec Mixtec* [Data collection]. The Archive of the Indigenous Languages of Latin America (AILLA). PID Collection 2123. https://www.ailla.utexas.org/ (Accessed 25 September 2026.)
 
 **Note (added 2026-09-21):** the 818-token v1-era `transcriptions-xml/` figure above was extracted with a script since found to truncate multi-word utterances to their first word. ~441 of those 818 tokens were likely mismatched audio/text pairs rather than genuine single-word elicitations. This is corrected in the v2 pool above (2,513 tokens, word-level extraction of multi-word sentences).
 
