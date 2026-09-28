@@ -65,7 +65,7 @@ Training/dev split (v1): 968 / 108 (90/10 random split, seed=42), performed on t
 
 ### 2.2 Held-out test set
 
-**Refreshed 2026-09-25.** The original 10-file set (2.2, pre-2026-09-24) was found to be substantially echo/reverb-contaminated. Six files were confirmed unsuitable for evaluation and moved into the training pool instead (echo degrades eval precision but not training robustness); the remaining 4 were kept, and 4 newly recorded, higher-quality files were added, this is why the test set is ony 19 tokens.
+The original 10-file set (2.2, pre-2026-09-24) was found to be substantially echo/reverb-contaminated. Six files were confirmed unsuitable for evaluation and moved into the training pool instead (echo degrades eval precision but not training robustness); the remaining 4 were kept, and 4 newly recorded, higher-quality files were added, this is why the test set is ony 19 tokens.
 
 **Current set: 8 files, split into two evaluation tracks:**
 

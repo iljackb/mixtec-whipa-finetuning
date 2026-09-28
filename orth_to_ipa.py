@@ -40,6 +40,7 @@ import re
 import json
 import csv
 import unicodedata
+from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Vowel + tone dict (oral) -- confirmed inventory: a i u o e (-> ɛ)
@@ -371,7 +372,17 @@ def convert_utterance(orth: str):
 
 
 def main():
-    with open("myuc1042_parsed.json", encoding="utf-8") as f:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("input_json", nargs="?", default="myuc1042_parsed.json",
+                     help="Parsed entries JSON from parse_researcher_archive.py "
+                          "(default: myuc1042_parsed.json, for backward compatibility)")
+    ap.add_argument("--output", type=str, default=None,
+                     help="Output review CSV path (default: derived from input filename, "
+                          "e.g. myuc1038_parsed.json -> myuc1038_draft_ipa_review.csv)")
+    args = ap.parse_args()
+
+    with open(args.input_json, encoding="utf-8") as f:
         entries = json.load(f)
 
     rows = []
@@ -388,7 +399,12 @@ def main():
             "flags": "; ".join(sorted(set(flags))) if flags else "",
         })
 
-    out_path = "myuc1042_draft_ipa_review.csv"
+    if args.output:
+        out_path = args.output
+    else:
+        stem = Path(args.input_json).stem
+        stem = stem[:-len("_parsed")] if stem.endswith("_parsed") else stem
+        out_path = f"{stem}_draft_ipa_review.csv"
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["start", "end", "orth", "draft_ipa", "eng", "spn", "notes", "flags"])
         writer.writeheader()

@@ -14,10 +14,9 @@ FORMAT OBSERVED:
   - Blocks separated by one or more blank lines
 
 FILTERING:
-  Only blocks belonging to the main speaker (default speaker code "GML") are
-  kept. Interviewer turns (e.g. "@Interviewer1", "@Interviewer2") are
-  discarded entirely, per the decision that interviewer content is out of
-  scope for this corpus.
+  Only blocks belonging to one of the given speaker code(s) (default: just
+  "GML") are kept; --speaker accepts a comma-separated list. All other
+  speakers' blocks are discarded entirely.
 
 TIMECODE FORMAT: "HH:MM:SS.mmm - HH:MM:SS.mmm" -- converted to seconds
 (float) for both start and end, matching how this project's other TEI files
@@ -25,6 +24,16 @@ represent timing.
 
 Usage:
     python3 parse_researcher_archive.py MYUC-1042.txt --speaker GML
+    python3 parse_researcher_archive.py MYUC-1038.txt --speaker Interviewer,Sp2,HVL
+
+NOTE (2026-09-28): --speaker now accepts a comma-separated list of codes to
+keep (originally single-speaker only, extended for MYUC-1038 which has
+Mixtec content split across multiple speaker/interviewer tiers). Any block
+whose speaker code is not in the list is still discarded, same as before.
+This does NOT filter by language -- a kept speaker's block is kept whether
+it is Mixtec or Spanish (e.g. consent-section code-switching); that is left
+for manual review in the output CSV, per project convention of flagging/
+leaving decisions for review rather than silently guessing.
 """
 
 import argparse
@@ -44,7 +53,7 @@ def timecode_to_seconds(tc: str) -> float:
     return int(h) * 3600 + int(m_) * 60 + int(s) + int(ms) / (10 ** len(ms))
 
 
-def parse_file(path: Path, speaker: str):
+def parse_file(path: Path, speakers: set):
     with open(path, encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -102,7 +111,7 @@ def parse_file(path: Path, speaker: str):
             elif tier_type == "Notes":
                 parsed["notes"] = content
 
-        if block_speaker != speaker:
+        if block_speaker not in speakers:
             skipped_other_speaker += 1
             continue
 
@@ -121,14 +130,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("input_file", type=str)
     ap.add_argument("--speaker", type=str, default="GML",
-                     help="Speaker code to keep (default: GML). All other speakers' blocks are discarded.")
+                     help="Comma-separated speaker code(s) to keep (default: GML). "
+                          "All other speakers' blocks are discarded. Does not filter "
+                          "by language -- a kept speaker's Spanish blocks (e.g. "
+                          "consent-section code-switching) are kept too; review/remove "
+                          "those manually in the output CSV.")
     ap.add_argument("--output", type=str, default=None,
                      help="Optional: write parsed result to this JSON file for inspection")
     args = ap.parse_args()
 
-    entries, skipped = parse_file(Path(args.input_file), args.speaker)
+    speakers = {s.strip() for s in args.speaker.split(",") if s.strip()}
+    entries, skipped = parse_file(Path(args.input_file), speakers)
 
-    print(f"Parsed {len(entries)} entries for speaker '{args.speaker}'")
+    print(f"Parsed {len(entries)} entries for speaker(s) {sorted(speakers)}")
     print(f"Skipped {skipped} entries from other speakers (interviewer turns, etc.)")
     print(f"\nFirst 3 entries:")
     for e in entries[:3]:
