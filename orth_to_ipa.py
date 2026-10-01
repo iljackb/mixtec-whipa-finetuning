@@ -81,6 +81,12 @@ CONSONANT_MAP = {
     "n": "n",
     "y": "j",
     "t": "t̪",  # TENTATIVE -- flagged in output, see module docstring
+    "d": "d̪",  # TENTATIVE, added 2026-09-29 -- see module docstring update below.
+               # NOTE: only reachable for a standalone orthographic "d"; "nch" is
+               # matched as its own 3-char unit (-> "ndʒ") before this 1-char rule
+               # is ever tried, so the "d" inside that affricate is NOT affected --
+               # affricate-safety here is automatic from the longest-match-first
+               # ordering, not a special case that needed adding.
 }
 # NOTE: "ñ" -> "ɲ" is NOT handled here. It's protected from NFD decomposition
 # and substituted directly in convert_word() before this map is ever
@@ -337,6 +343,8 @@ def convert_word(word: str):
                     result.append(CONSONANT_MAP[candidate])
                     if candidate == "t":
                         flags.append("t->t̪ (tentative, verify)")
+                    elif candidate == "d":
+                        flags.append("d->d̪ (tentative, verify)")
                     i += length
                     matched = True
                     break
@@ -357,8 +365,17 @@ def convert_word(word: str):
     return ipa, flags
 
 
+# Sentence-level punctuation -- not part of the orthography's phonological
+# content, just written-language convention (question marks, etc.). Stripped
+# here (IPA output only -- the `orth` column in the review CSV is untouched,
+# so the original punctuation is still visible for context during review).
+SENTENCE_PUNCTUATION_RE = re.compile(r"[¿?]")
+
+
 def convert_utterance(orth: str):
     """Split on hyphens (clitic boundaries), convert each piece, join with space."""
+    orth = SENTENCE_PUNCTUATION_RE.sub("", orth)
+    orth = re.sub(r"\s+", " ", orth).strip()
     pieces = orth.split("-")
     ipa_pieces = []
     all_flags = []
