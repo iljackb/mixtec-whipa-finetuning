@@ -40,7 +40,6 @@ import re
 import json
 import csv
 import unicodedata
-from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Vowel + tone dict (oral) -- confirmed inventory: a i u o e (-> ɛ)
@@ -81,12 +80,6 @@ CONSONANT_MAP = {
     "n": "n",
     "y": "j",
     "t": "t̪",  # TENTATIVE -- flagged in output, see module docstring
-    "d": "d̪",  # TENTATIVE, added 2026-09-29 -- see module docstring update below.
-               # NOTE: only reachable for a standalone orthographic "d"; "nch" is
-               # matched as its own 3-char unit (-> "ndʒ") before this 1-char rule
-               # is ever tried, so the "d" inside that affricate is NOT affected --
-               # affricate-safety here is automatic from the longest-match-first
-               # ordering, not a special case that needed adding.
 }
 # NOTE: "ñ" -> "ɲ" is NOT handled here. It's protected from NFD decomposition
 # and substituted directly in convert_word() before this map is ever
@@ -114,6 +107,12 @@ WORD_EXCEPTIONS = {
     "kuê": "wɛ̂",  # k fully elided here (unlike the general ku-glide rule,
                    # which would otherwise give "kwɛ̂" -- confirmed this
                    # specific word drops the k entirely, not just glides it)
+    "nùǔ": "nũ̀ũ̌",  # face is always nasalized and the tones and length are
+                     # almost always reduced but setting this as the initial
+                     # form to be modified upon analysis of utterance
+    "ka": "k̬a",  # whole-word only -- k is partially voiced (voicing diacritic,
+                  # U+032C) in this exact word; does NOT generalize to "ka" as
+                  # a substring of longer words, which keep the plain k->k mapping
 }
 
 
@@ -343,8 +342,6 @@ def convert_word(word: str):
                     result.append(CONSONANT_MAP[candidate])
                     if candidate == "t":
                         flags.append("t->t̪ (tentative, verify)")
-                    elif candidate == "d":
-                        flags.append("d->d̪ (tentative, verify)")
                     i += length
                     matched = True
                     break
@@ -365,17 +362,8 @@ def convert_word(word: str):
     return ipa, flags
 
 
-# Sentence-level punctuation -- not part of the orthography's phonological
-# content, just written-language convention (question marks, etc.). Stripped
-# here (IPA output only -- the `orth` column in the review CSV is untouched,
-# so the original punctuation is still visible for context during review).
-SENTENCE_PUNCTUATION_RE = re.compile(r"[¿?]")
-
-
 def convert_utterance(orth: str):
     """Split on hyphens (clitic boundaries), convert each piece, join with space."""
-    orth = SENTENCE_PUNCTUATION_RE.sub("", orth)
-    orth = re.sub(r"\s+", " ", orth).strip()
     pieces = orth.split("-")
     ipa_pieces = []
     all_flags = []
@@ -389,17 +377,7 @@ def convert_utterance(orth: str):
 
 
 def main():
-    import argparse
-    ap = argparse.ArgumentParser()
-    ap.add_argument("input_json", nargs="?", default="myuc1042_parsed.json",
-                     help="Parsed entries JSON from parse_researcher_archive.py "
-                          "(default: myuc1042_parsed.json, for backward compatibility)")
-    ap.add_argument("--output", type=str, default=None,
-                     help="Output review CSV path (default: derived from input filename, "
-                          "e.g. myuc1038_parsed.json -> myuc1038_draft_ipa_review.csv)")
-    args = ap.parse_args()
-
-    with open(args.input_json, encoding="utf-8") as f:
+    with open("myuc1042_parsed.json", encoding="utf-8") as f:
         entries = json.load(f)
 
     rows = []
@@ -416,12 +394,7 @@ def main():
             "flags": "; ".join(sorted(set(flags))) if flags else "",
         })
 
-    if args.output:
-        out_path = args.output
-    else:
-        stem = Path(args.input_json).stem
-        stem = stem[:-len("_parsed")] if stem.endswith("_parsed") else stem
-        out_path = f"{stem}_draft_ipa_review.csv"
+    out_path = "myuc1042_draft_ipa_review.csv"
     with open(out_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["start", "end", "orth", "draft_ipa", "eng", "spn", "notes", "flags"])
         writer.writeheader()
