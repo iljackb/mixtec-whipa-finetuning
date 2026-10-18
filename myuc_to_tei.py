@@ -1,6 +1,6 @@
 """
 Code composed by Jack Bowers & Claude
-2026/09/17
+2026/10/18
 
 Build the final TEI/XML document for the AILLA MYUC-1042 source, from:
   - the finalized review CSV (columns: start, end, orth, final_ipa,
@@ -89,8 +89,8 @@ def build_header(contributors, wav_file):
       <fileDesc>
          <titleStmt>
             <title>IPA transcriptions of {escape(wav_file)}</title>
-            <title xml:lang="en">I work with bees</title>
-            <title xml:lang="mix">Sáchúùn tsi ñùñǔ</title>
+            <title xml:lang="en">How the ancestors used to celebrate</title>
+            <title xml:lang="mix">Nixi ntsìsá'a kue nà yatá vikǒ</title>
             <respStmt>
                <resp>IPA Transcription</resp>
                <resp>Encoding</resp>
@@ -105,13 +105,15 @@ def build_header(contributors, wav_file):
          </publicationStmt>
          <sourceDesc>
             <bibl>
-               <title xml:lang="en">I work with bees</title> 
-               <title xml:lang="es">Trabajo con abejas</title>
-               <title xml:lang="mix">Sáchúùn tsi ñùñǔ</title>
+               <title xml:lang="en">How the ancestors used to celebrate
+
+</title> 
+               <title xml:lang="es">Cómo hacían las fiestas los ancestros</title>
+               <title xml:lang="mix">Nixi ntsìsá'a kue nà yatá vikǒ</title>
                <publisher>The Archive of the Indigenous Languages of Latin America (AILLA), <orgName>University of Texas at Austin</orgName></publisher>
                <date>2022</date>
-               <idno type="AILLA">27418</idno>
-               <ptr target="https://www.ailla.utexas.org/sets/27418/"/>
+               <idno type="AILLA">27416</idno>
+               <ptr target="https://www.ailla.utexas.org/sets/27416/"/>
             </bibl> 
          </sourceDesc>
       </fileDesc>
@@ -192,14 +194,14 @@ def main():
         print("Usage: python3 myuc_to_tei.py <csv_file> <contributors_file> [output_file] [wav_file]")
         print(f"  arg {CSV_FILE_ARG}: the finalized review CSV")
         print(f"  arg {CONTRIBUTORS_FILE_ARG}: contributors.txt")
-        print(f"  arg {OUTPUT_FILE_ARG} (optional): output TEI filename, default MYUC-1042.xml")
-        print(f"  arg {WAV_FILE_ARG} (optional): source .wav filename, default MYUC-1042.wav")
+        print(f"  arg {OUTPUT_FILE_ARG} (optional): output TEI filename, default MYUC-1038.xml")
+        print(f"  arg {WAV_FILE_ARG} (optional): source .wav filename, default MYUC-1038.wav")
         sys.exit(1)
 
     csv_file = sys.argv[CSV_FILE_ARG]
     contributors_file = sys.argv[CONTRIBUTORS_FILE_ARG]
-    output_file = sys.argv[OUTPUT_FILE_ARG] if len(sys.argv) > OUTPUT_FILE_ARG else "MYUC-1042.xml"
-    wav_file = sys.argv[WAV_FILE_ARG] if len(sys.argv) > WAV_FILE_ARG else "MYUC-1042.wav"
+    output_file = sys.argv[OUTPUT_FILE_ARG] if len(sys.argv) > OUTPUT_FILE_ARG else "MYUC-1038.xml"
+    wav_file = sys.argv[WAV_FILE_ARG] if len(sys.argv) > WAV_FILE_ARG else "MYUC-1038.wav"
 
     contributors = parse_contributors(Path(contributors_file))
     print(f"Parsed {len(contributors)} contributors:")

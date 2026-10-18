@@ -5,10 +5,10 @@
 export, not yet TEI/XML — into this project's corpus. This pipeline is
 **upstream of and separate from** the fine-tuning extraction pipeline
 (`extract_finetune_data_unified.py`, etc.): it produces a human-reviewed
-draft, not training data directly. A source only enters
+draft, then TEI/XML, not training data directly. A source only enters
 `extract_finetune_data_unified.py`'s scope once it exists as TEI/XML.
 
-Last updated: 2026-09-28
+Last updated: 2026-10-18
 
 ---
 
@@ -45,13 +45,24 @@ orth_to_ipa.py
 <name>_draft_ipa_review.csv   (draft_ipa + review flags)
       |
       v
-MANUAL REVIEW (Jack) -- fix/verify draft_ipa, delete non-target-language rows
+MANUAL REVIEW (Jack) -- audit by ear, fill final_ipa, delete non-target-language rows
       |
       v
-[not yet scripted] -- integration into TEI/XML
+<name>_final review CSV  (draft_ipa column finalized as final_ipa)
+      |
+      v
+myuc_to_tei.py  <csv> <contributors.txt> [output.xml] [wav]
+      |
+      v
+<name>.xml   (TEI/XML, ready for the rest of the corpus pipeline)
 ```
 
-Both scripts live at the top level of `~/Code/Projects/whipa/`.
+Scripts: `parse_researcher_archive.py` and `orth_to_ipa.py` live at the top
+level of `~/Code/Projects/whipa/`. `myuc_to_tei.py` was not in the repo as of
+2026-10-18 (never committed; see Open items) — commit it alongside the others.
+
+Transcription conventions applied during manual review are documented in
+`IPA_Transcription_Guidelines.md` (esp. §9, and §6 for pending items).
 
 ---
 
@@ -122,6 +133,101 @@ Output columns: `start,end,orth,draft_ipa,eng,spn,notes,flags`. This is a
 being treated as a training target, same as `finetune_review_unified.csv`
 elsewhere in this project.
 
+**Whole-word exceptions (`WORD_EXCEPTIONS`)**: checked first, on an exact
+whole-word match, before any general rule. Current entries (2026-10-18):
+`kuê` → `wɛ̂` (k fully elided), `nùǔ` → `nũ̀ũ̌` ("face"; always nasalized,
+tones/length usually reduced, set as the initial form to modify on analysis
+of the actual utterance), `ka` → `k̬a` (whole word only; partially voiced k —
+not applied to `ka` inside longer words). See `IPA_Transcription_Guidelines.md`
+§9d.
+
+**Known limits — handle before running a new source:**
+- **Hyphens are NOT yet disambiguated.** The script treats every hyphen as a
+  clitic boundary (convert each piece, join with a space). That is wrong for
+  bound-morpheme markers written with hyphens by the UCSB/other-group
+  convention (e.g. `ìǐ-à`, `-i`), which are phonologically fused and should
+  be joined, not spaced; reducing enclitics such as `-ña` (→ [a]) are a third
+  case. Resolve the morpheme/enclitic rule (see `IPA_Transcription_Guidelines.md`
+  §9e) **before** running any new source that contains hyphenated forms.
+- **`r` is deliberately unmapped.** Orthographic `r` is realized as either
+  trill [r] or tap [ɾ], decided case-by-case by ear, so it has no entry in
+  `CONSONANT_MAP` and shows up as an `unmapped char` flag to be filled in
+  during review (§9b).
+- **Cross-word coarticulation is not modeled.** Rules like glide formation
+  across a word boundary (lexical /kú ìǐ ɲà/ realized [kwìǐã]) are written by
+  hand during review, as one continuous string with no internal space (§9c).
+
+---
+
+## Step 3: manual review (by ear)
+
+The draft CSV is audited row by row, and the finalized IPA goes in a
+`final_ipa` column (this is the column name `myuc_to_tei.py` reads; the
+`draft_ipa` column from Step 2 is not read). Optional extra column
+`Notes (Jack)` carries Jack's own notes into the TEI. Conventions to apply
+(full detail and rationale in `IPA_Transcription_Guidelines.md` §9 and §6):
+
+- Transcribe what is actually heard, not what the orthography says.
+- Spacing in the IPA follows real phonetic breaks, not lexical ones: no space
+  for non-lexical pauses or cross-word coarticulation (§9c).
+- Elongated vowel with rising/falling tone from a transitional pause: global
+  ↗/↘, original diacritic dropped (`tsíǒ` → `[tsíooo↗]`) (§9a).
+- Never trim the `orth` column to match a trimmed `final_ipa`. If an unclear
+  leading/trailing word is dropped from the IPA, keep the full orth and name
+  the dropped word(s) in the notes (§9f).
+- A stray non-lexical sound between two words (e.g. an isolated `[s]`): no
+  mechanism yet (§6). Current policy is to skip the utterance, or keep only
+  the clean preceding or following portion.
+- Delete non-target-language rows (e.g. Spanish consent/setup speech).
+
+---
+
+## Step 4: `myuc_to_tei.py`
+
+Builds the final TEI/XML from the audited review CSV plus a
+`contributors.txt`. Written for MYUC-1042; **the header template is
+file-specific and must be edited for each new source** (see below).
+
+**Usage:**
+```
+python3 myuc_to_tei.py <final_review.csv> <contributors.txt> [output.xml] [wav_file]
+```
+The last two arguments default to `MYUC-1042.xml` / `MYUC-1042.wav`; always
+pass your own for a new source so the 1042 output isn't overwritten.
+
+**Input CSV columns read**: `start`, `end`, `orth`, `final_ipa`, `eng`, `spn`,
+`notes` (UCSB team's notes), `Notes (Jack)`. `flags` and `draft_ipa` are
+ignored. Timestamps are re-normalized to exactly 3 decimal places.
+
+**Output structure** (per row): `<u n xml:id="u-{start}" start end>` containing
+`<seg xml:lang="mix" notation="orth-ucsb">` (original orthography),
+`<seg xml:lang="mix" notation="ipa">` (finalized IPA — this exact `notation`
+value is how the extraction scripts find the IPA tier, so don't change it),
+and a `<spanGrp type="annotations">` with English/Spanish translations and
+notes (UCSB notes `resp="#JS #GVB #EC"`, Jack's notes `resp="#JB"`).
+
+**Editing the file-specific header** — `build_header()`:
+- `<title>` lines (generic, English, Mixtec) in `titleStmt`, and the three
+  `bibl` titles (English, Spanish, Mixtec)
+- AILLA id (`<idno type="AILLA">`) and the `<ptr target>` set URL
+- publication `<date>` and recording/creation date
+- `placeName` block (town, municipality, region, country)
+- `keywords` (genre, content type)
+- the licence line in `publicationStmt`
+
+**Contributors**: one line per person in `contributors.txt`, formatted
+`name<TAB>role1, role2`; `build_resp_stmts()` turns each into a `<respStmt>`.
+Jack's own `JB` respStmt is hardcoded in `titleStmt`. To attribute a
+contributor's notes via `@resp`, add their name and initials to the
+`RESP_INITIALS` dict at the top of the script (currently JS, GVB, EC, JB).
+
+**Caution — two versions exist.** A variant that adds tokenized `<w>`
+elements to the orth and IPA segs was iterated on but is not finished: it
+calls `orth.split(r"[\s\-]+", orth.split())` where `re.split(r"[\s\-]+", orth)`
+is intended, and has `type="untokenized notation="orth-ucsb"` with a missing
+closing quote (malformed XML). Use the non-tokenized version, or fix both
+before using the tokenized one.
+
 ---
 
 ## The intermediate `<name>_parsed.json`
@@ -137,14 +243,22 @@ long-term.
 
 ## Open items
 
-- **No scripted TEI/XML integration step yet.** The draft CSV → TEI
-  conversion for these sources is still manual. If this pipeline gets used
-  for more sources, that's the next piece worth scripting.
+- **`myuc_to_tei.py` is not in the repo** (never committed as of 2026-10-18),
+  and none of the three MYUC scripts were documented before this file. Commit
+  it, and decide which of its two variants is canonical.
+- **Hyphen disambiguation** (morpheme vs. enclitic vs. reducing enclitic) must
+  be resolved before the next source containing hyphenated forms goes through
+  `orth_to_ipa.py` — see Step 2 and `IPA_Transcription_Guidelines.md` §9e.
+- **Header template is hand-edited per source.** If more sources go through
+  Step 4, consider moving the file-specific header fields (titles, AILLA id,
+  dates, place, keywords) out of `build_header()` into an input file, the way
+  contributors already are. Also generalize the `MYUC-1042` defaults.
 - **No automated language detection.** Code-switched Spanish rows inside an
   otherwise-Mixtec speaker tier are left in the output for manual deletion
   (see Step 1 above) rather than heuristically filtered — deliberate, not an
   oversight.
-- **Speaker identity is not resolved at this stage.** `parse_researcher_archive.py`
+- **Speaker identity is not resolved at Steps 1–2.** `parse_researcher_archive.py`
   keeps whatever speaker codes it's told to, without checking those codes
   against the source's AILLA citation metadata (transcriber/interviewer
-  names). That reconciliation happens later, at TEI conversion.
+  names). That reconciliation happens at TEI conversion (Step 4, via
+  `contributors.txt` and `RESP_INITIALS`).
