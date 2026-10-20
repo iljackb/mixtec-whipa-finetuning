@@ -33,7 +33,7 @@ Usage:
         # single corpus root, all subfolders nested under it:
         python3 classify_tei_structure.py /path/to/Mixtepec_Mixtec --recursive --tsv classification.tsv
 
-        # a second, unrelated root -- append to the same TSV rather than
+        # to get test files' structure run on a second, unrelated root -- append to the same TSV rather than 
         # overwriting, so results accumulate across runs:
         python3 classify_tei_structure.py /path/to/mixtec-whipa-finetuning --recursive --tsv classification.tsv --append
 """

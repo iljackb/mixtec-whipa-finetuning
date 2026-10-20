@@ -3,12 +3,13 @@ Check the training manifest against actual audio files on disk: for each row's
 wav_file, search one or more candidate base directories (searched recursively)
 for a matching filename, and report what's found vs. missing.
 
-Usage:
+Usage: (note update and add new paths as needed each run!)
 python3 verify_audio_paths.py finetune_review_unified.csv \
   --search-dir "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/media/speech-mix" \
   --search-dir "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/SIL_docs/Aprendamos-2018/Archivos_de_audio___Mixtepec/mono" \
   --search-dir "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/misc-sources/Jerry_Guillem_Mixtec/bees"
-Add as many --search-dir flags as needed. Searches recursively (subfolders included).
+  --search-dir "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/misc-sources/Jerry_Guillem_Mixtec/celebrate"
+  Add as many --search-dir flags as needed. Searches recursively (subfolders included).
 """
 
 import argparse

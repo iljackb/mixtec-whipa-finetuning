@@ -2,7 +2,7 @@
 Code composed by Jack Bowers & Claude
 2026/10/18
 
-Build the final TEI/XML document for the AILLA MYUC-1042 source, from:
+Build the final TEI/XML document for the AILLA MYUC source files, from:
   - the finalized review CSV (columns: start, end, orth, final_ipa,
     "Notes (Jack)", eng, spn, notes, flags -- flags is dropped)
   - contributors.txt (name<TAB>role, comma-separated for multiple roles)
@@ -149,11 +149,11 @@ def build_utterance(row, n):
     start = f"{float(row['start']):.3f}"
     end = f"{float(row['end']):.3f}"
     orth = escape(row.get("orth", "").strip())
-    ipa = escape(row.get("final_ipa", "").strip())
+    ipa = escape(row.get("draft_ipa", "").strip())
     eng = escape(row.get("eng", "").strip())
     spn = escape(row.get("spn", "").strip())
     ucsb_note = row.get("notes", "").strip()
-    jack_note = row.get("Notes (Jack)", "").strip()
+    jack_note = row.get("notes_jb", "").strip()
 
     u_id = f"u-{start}"
     orth_id = f"T-o-{start}"

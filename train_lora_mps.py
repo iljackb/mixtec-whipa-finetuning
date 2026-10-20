@@ -60,7 +60,7 @@ STEP-BY-STEP WHAT THIS SCRIPT DOES:
       merged model to disk -- same final step fine_tune.py performs for a
       PEFT run when save_steps isn't set.
 
-Usage (run from inside whipa/code/, same as run_prep_dataset.py):
+Usage (run from inside whipa/code/, same as run_prep_dataset.py) (change output_dir to your dir):
 
     python3 train_lora_mps.py \
         --dataset-dir ../whipa_prepped_dataset \
@@ -68,6 +68,22 @@ Usage (run from inside whipa/code/, same as run_prep_dataset.py):
         --output-dir ../models/lowhipa-mixtec-v1 \
         --num-train-epochs 5 \
         --dev-fraction 0.1
+
+
+To prevent crashing when computer times out and monitor the progress incase
+ you need to resume progress before process is completed, add the following
+before the command above, run as follows:
+
+nohup caffeinate -i python3 -u train_lora_mps.py \
+    --dataset-dir ../whipa_prepped_dataset \
+    --base-model openai/whisper-large-v2 \
+    --output-dir ../models/lowhipa-mixtec-v3 \
+    --num-train-epochs 5 \
+    --dev-fraction 0.1 \
+    > train.log 2>&1 &
+
+tail -f train.log
+
 """
 
 import argparse

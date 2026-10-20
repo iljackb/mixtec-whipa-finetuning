@@ -38,14 +38,18 @@ DESIGN, revised after inspecting your actual code/scripts/whipa_utils.py directl
   annotated content was a tone mark).
 
 Usage:
-    python3 build_finetune_dataset.py finetune_review_unified.csv \
-        --search-dir "/path/to/media/speech-mix" \
-        --search-dir "/path/to/SIL_docs/Aprendamos-2018" \
-        --output-dir ./whipa_raw_dataset
+python3 build_finetune_dataset.py finetune_review_unified.csv \
+  --search-dir "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/media/speech-mix" \
+  --search-dir "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/SIL_docs/Aprendamos-2018/Archivos_de_audio___Mixtepec/mono" \
+  --search-dir "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/misc-sources/Jerry_Guillem_Mixtec/bees" \
+  --search-dir "/Users/jackbowers/Archived - Box Sync/Language_Data/Mixtepec_Mixtec/misc-sources/Jerry_Guillem_Mixtec/celebrate"
 
 Requires: datasets, soundfile, scipy, numpy (already installed per earlier
 whipa setup steps in this project). Does NOT require transformers/torch for
 this step -- those are only needed for the subsequent prep_dataset() call.
+
+By Jack Bowers & Claude
+2026/10/18
 """
 
 import argparse

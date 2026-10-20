@@ -30,7 +30,7 @@ If you're trying to fine-tune WhIPA on your own custom corpus, read **[docs/IMPL
 
 - Second working fine-tuned checkpoint (`lowhipa-mixtec-v2`) trained on 3,321 tokens;
 
-See detailed documentation, latest results as well as status of the fine tuning and testing in [WhIPA Fine-Tuning on Mixtepec Mixtec: Preliminary Results Report](https://github.com/iljackb/mixtec-whipa-finetuning/blob/main/docs/Preliminary_Results_Report.md)
+See detailed documentation, latest results as well as status of the fine tuning and testing in [WhIPA Fine-Tuning on Mixtepec Mixtec: Preliminary Results Report](https://github.com/iljackb/mixtec-whipa-finetuning/blob/main/docs/Preliminary_Results_Report-v2-20260923.md)
 
 ### Note:
 This system was implemented (and debugged) with AI assistance from Claude

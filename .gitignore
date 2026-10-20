@@ -18,3 +18,5 @@ __pycache__/
 finetune_corpus/wav/
 finetune_corpus/wav/
 finetune_corpus/
+archive/*.mp3
+archive/*.wav
