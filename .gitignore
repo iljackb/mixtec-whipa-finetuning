@@ -34,3 +34,4 @@ checkpoint-*/
 *.arrow
 whipa_prepped_dataset*/
 whipa_raw_dataset*/
+*.pre-ratefix
