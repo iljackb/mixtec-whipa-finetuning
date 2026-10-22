@@ -1,0 +1,23 @@
+wav_file,token_n,orth,n_words,track,predicted,gold_normalized,per,pfer
+190630_0048-hand-cactus.wav,1,tuxichi,1,single,t̪uʃitʃi,tuʃit͡ʃi,50.0,18.75
+190630_0051-na'nu-ka'nu.wav,1,naꞌnu,1,single,nano,nãʔnũ,60.0,23.33
+190630_0051-na'nu-ka'nu.wav,2,ita naꞌnu,2,phrase,itana,ita nãʔnũ,50.0,38.02
+190710_0257-ate-eat-will-eat.wav,1,,0,phrase,dzat͡si,nt͡sat͡si na staa,72.73,56.44
+190710_0257-ate-eat-will-eat.wav,2,,0,phrase,dzat͡sina,nt͡sat͡si na staa,54.55,38.26
+190710_0257-ate-eat-will-eat.wav,3,,0,phrase,t͡sat͡sina,t͡sat͡si na staa,40.0,40.0
+190710_0257-ate-eat-will-eat.wav,4,,0,phrase,t͡sãːt͡sãːt͡sãːt͡sãːt͡sãːt͡sãːt͡,t͡sat͡si na staa,110.0,39.17
+190710_0257-ate-eat-will-eat.wav,5,,0,phrase,kũ,kũk̬at͡si na staa,83.33,83.33
+190710_0257-ate-eat-will-eat.wav,6,,0,phrase,kũũũ,kũk̬at͡si na staa,83.33,69.79
+190710_0270-tell-the-truth.wav,1,ntakani ntai,2,phrase,ndaka,ndakani ndai,54.55,54.55
+190710_0270-tell-the-truth.wav,2,ntakani ndaa yu,3,phrase,ndaka,ndakani ndaa ju,61.54,61.54
+190710_0270-tell-the-truth.wav,3,kuntakani ntaa yu,3,phrase,kunda,kundakani ndaa ju,66.67,66.67
+190710_0270-tell-the-truth.wav,4,ntakani ntai,2,phrase,ndakani,ndakani ndai,36.36,36.36
+ADJ_dangerous_01_JS.wav,1,xeen,1,single,ʃe,ʃɛ̃ɛ̃,66.67,36.11
+ADJ_dangerous_02_JS.wav,1,xeen,1,single,ʃe,ʃɛ̃ɛ̃,66.67,36.11
+ADJ_difficult_01_02_spkrTS.wav,1,nchichi,1,single,dʒitʃi,nd͡ʒit͡ʃi,80.0,25.0
+ADJ_difficult_01_02_spkrTS.wav,2,nchich,1,single,ndʒitʃi,nd͡ʒit͡ʃi,80.0,43.33
+ADJ_fat_01_02_spkrTS.wav,1,kochi,1,single,koçi,kot͡ʃi,25.0,5.73
+ADJ_fat_01_02_spkrTS.wav,2,kochi,1,single,koʔçi,kot͡ʃi,50.0,30.73
+,,,,,,,,
+MEAN_SINGLE_WORD,"n=8 scored, 0 errors",lowhipa-mixtec-v1-ratefix,1,single,,,59.79,27.39
+MEAN_PHRASE_LEVEL,n=11 scored,lowhipa-mixtec-v1-ratefix,>1,phrase,,,64.82,53.1

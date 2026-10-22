@@ -1,6 +1,6 @@
 wav_file,token_n,start,end,orth,n_words,predicted,gold_raw,gold_normalized
 190630_0048-hand-cactus.wav,1,19.1,19.89,tuxichi,1,tuʂiːt͡ɕi,tùʃitʃǐ,tuʃit͡ʃi
-190630_0051-na'nu-ka'nu.wav,1,7.84,8.31,naꞌnu,1,n,nã́ʔnũ,nãʔnũ
+190630_0051-na'nu-ka'nu.wav,1,7.84,8.31,naꞌnu,1,nɛnːu,nã́ʔnũ,nãʔnũ
 190630_0051-na'nu-ka'nu.wav,2,9.59,10.3,ita naꞌnu,2,itːaːnnːaːn,itá nã́ʔnũ,ita nãʔnũ
 190710_0257-ate-eat-will-eat.wav,1,1.4,3.15,,0,d͡ʒat͡sːinasta,ntsàtsi nà stàǎ,nt͡sat͡si na staa
 190710_0257-ate-eat-will-eat.wav,2,3.52,5.04,,0,d͡ʒat͡sinafsta,ntsàtsi nà stàǎ,nt͡sat͡si na staa

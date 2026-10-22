@@ -20,9 +20,9 @@ If you're trying to fine-tune WhIPA on your own custom corpus, read **[docs/IMPL
   - `build_finetune_dataset.py`: crops/resamples audio and builds a raw `datasets.Dataset`.
   - `run_prep_dataset.py`: applies WhIPA's own feature-extraction/tokenization functions to that dataset.
   - `train_lora_mps.py`: LoRA fine-tuning script adapted for Apple Silicon (MPS), since WhIPA's own training script's PEFT path is CUDA-only (8-bit quantization via `bitsandbytes`).
+  - `summarize_training.py`: summarizes a finished fine-tuning run from the Trainer's saved `trainer_state.json` (in the `checkpoint-*` folders of the model output directory): the eval-loss curve per evaluation step, whether the best and final checkpoints coincide, and overfitting checks. Prints a ready-to-paste Markdown section for the results report; `--md` also saves it (e.g. into the model folder), `--csv` saves the curve. Run it on each new model directory right after training, e.g. `python3 summarize_training.py models/lowhipa-mixtec-v3`.
   - `test_whipa.py`: inference/testing against a held-out set.
   - `score_test_results.py`: evaluation via WhIPA's own `STIPA_METRICS` (PER/PFER), scoring the predictions `test_whipa.py` just produced.
-  - 
 
 ## Status
 

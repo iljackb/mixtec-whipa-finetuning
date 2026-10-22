@@ -37,6 +37,7 @@ import argparse
 import csv
 import sys
 from pathlib import Path
+import os
 
 import numpy as np
 import soundfile as sf
@@ -202,6 +203,7 @@ def main():
 
     if args.output_csv:
         out_path = Path(args.output_csv)
+        os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
         with open(out_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=CSV_FIELDNAMES)
             writer.writeheader()

@@ -80,8 +80,8 @@ class WHIPA:
             if not fallback_beams:
                 fallback_beams = [x for x in (1,3,5,7) if x!=n_beams]
 
-            rate_limit = max(round(len(sample["audio"]["array"])/16_000) * max_phones_per_sec_rate, 1)  # safety net for 0sec length samples
-            if verbose: print(f"Sample length: {round(len(sample['audio']['array'])/16_000)} seconds; Rate limit: max {rate_limit} phones estimated")
+            rate_limit = max(int(len(sample["audio"]["array"]) / 16_000 * max_phones_per_sec_rate), 5)  # exact duration; 5-phone floor
+            if verbose: print(f"Sample length: {len(sample['audio']['array'])/16_000:.2f} seconds; Rate limit: max {rate_limit} phones estimated")
             # check validity of prediciton
             if len(retokenize_ipa(out)) > rate_limit:  # max articulatory phone/secs rate
                 if verbose: print(f"Predcition: '{out}'\nWarning: {len(retokenize_ipa(out))} phones predicted (max: {rate_limit}); starting fallback")

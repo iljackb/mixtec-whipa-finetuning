@@ -20,3 +20,17 @@ finetune_corpus/wav/
 finetune_corpus/
 archive/*.mp3
 archive/*.wav
+
+# model weights and checkpoints
+models/
+checkpoint-*/
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.bin
+
+# prepared/raw datasets
+*.arrow
+whipa_prepped_dataset*/
+whipa_raw_dataset*/

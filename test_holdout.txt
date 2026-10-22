@@ -1,0 +1,8 @@
+190630_0048-hand-cactus.wav
+190630_0051-na'nu-ka'nu.wav
+190710_0257-ate-eat-will-eat.wav
+190710_0270-tell-the-truth.wav
+ADJ_dangerous_01_JS.wav
+ADJ_dangerous_02_JS.wav
+ADJ_difficult_01_02_spkrTS.wav
+ADJ_fat_01_02_spkrTS.wav
